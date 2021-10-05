@@ -1,6 +1,7 @@
 from typing import List, Optional, Union
-from objects import TimeoutCertificate, QuorumCertificate
-from ledger import Ledger
+from modules.objects.timeout_certificate import TimeoutCertificate
+from modules.objects.quorum_certificate import QuorumCertificate
+from modules.ledger.ledger import Ledger
 
 class Certificate:
     pass
