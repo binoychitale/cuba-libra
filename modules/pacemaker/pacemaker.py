@@ -1,6 +1,6 @@
 from modules.objects import TimeoutCertificate, TimeoutMessage, TimeoutInfo
 from typing import List, Dict
-from utils import date as date_utils
+from modules.utils import date as date_utils
 
 class Pacemaker:
     def __init__(self, sender_id, f):
@@ -22,16 +22,17 @@ class Pacemaker:
     
     def process_remote_timeout(self, timeout_message:TimeoutMessage):
         tmo_info:TimeoutInfo = timeout_message.tmo_info
-        if tmo_info.round_no < self.current_round:
+        if tmo_info.round < self.current_round:
             return None
-        if tmo_info.sender not in self.pending_timeouts[tmo_info.round_no]:
+        if tmo_info.sender not in self.pending_timeouts[tmo_info.round]:
             self.pending_timeouts[tmo_info.round_no][tmo_info.sender] = timeout_message
-        if len(self.pending_timeouts[tmo_info.round_no].keys()) == (self.f + 1):
+        if len(self.pending_timeouts[tmo_info.round].keys()) == (self.f + 1):
             self.start_timer(self.current_round)
             self.local_timeout_round()
 
-        if len(self.pending_timeouts[tmo_info.round_no].keys()) == (2 * self.f + 1):
-            return TimeoutCertificate() #TODO add implementation here
+        if len(self.pending_timeouts[tmo_info.round].keys()) == (2 * self.f + 1):
+            high_qc_rounds = map(lambda item: item.high_qc, self.pending_timeouts[tmo_info.round])
+            return TimeoutCertificate(tmo_info.round, high_qc_rounds, None) #TODO add implementation here
 
         return None
     
