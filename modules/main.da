@@ -5,6 +5,7 @@ class Main(process):
     def setup(ps:set, id:int):
         # do any additional setup here
         self.local_timeout_time =  round(time.time() * 1000)
+    
     def cs(task):
       # to enter cs, enque and send request to all, then await replies from all
         --start

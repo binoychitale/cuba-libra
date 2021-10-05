@@ -1,0 +1,2 @@
+class Ledger:
+    pass
