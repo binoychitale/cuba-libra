@@ -79,8 +79,9 @@ class Safety:
             vote_info_hash=str(hash(vote_info))  # TODO: Verify hashing done here
         )
 
+        # TODO: Complete sender and signature for votemsg
         return VoteMsg(
-            vote_info, ledger_commit_info, block_tree.high_commit_qc
+            vote_info, ledger_commit_info, block_tree.high_commit_qc, sender=None, signature=None
         )
     
     
@@ -101,4 +102,4 @@ class Safety:
 
         self._increase_highest_vote_round(round)
         # TODO: Construct timeout info properly
-        return TimeoutInfo(round, high_qc)
+        return TimeoutInfo(round, high_qc, sender=None, signature=None  )
