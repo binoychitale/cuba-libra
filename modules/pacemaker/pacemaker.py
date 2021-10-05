@@ -1,6 +1,6 @@
 from modules.objects.timeout_message import TimeoutMessage
 from typing import List, Dict
-from utils import date as date_utils
+from utils.helpers import date as date_utils
 
 class Pacemaker:
     def __init__(self, sender_id):
