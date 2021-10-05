@@ -19,3 +19,8 @@ docker run -v <path_to_project_dir>/modules:/root/cuba-libra/ -it py3.6
 docker exec -it <container-id> bash 
 ```
 NOTE: The project dir is now mounted in the container. All changes made in editor will reflect in container. You only need to re-run distalgo
+
+### Run distalgo from inside Docker container
+```bash
+python -m da <path-to-da-file>
+```
