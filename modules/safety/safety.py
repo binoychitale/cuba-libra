@@ -1,6 +1,5 @@
 from typing import List, Optional, Union
-from modules.objects.timeout_certificate import TimeoutCertificate
-from modules.objects.quorum_certificate import QuorumCertificate
+from modules.objects import TimeoutCertificate, Block, QuorumCertificate, VoteMsg 
 from modules.ledger.ledger import Ledger
 
 class Certificate:
@@ -50,3 +49,5 @@ class Safety:
         
         return None
 
+    def make_vote(self, block: Block, last_tc: TimeoutCertificate):
+        qc_round = block.qc.vote_info.round
