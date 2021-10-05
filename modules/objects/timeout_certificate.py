@@ -1,2 +1,0 @@
-class TimeoutCertificate:
-    pass
