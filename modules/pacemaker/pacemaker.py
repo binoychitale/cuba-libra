@@ -1,4 +1,4 @@
-from modules.objects.timeout_message import TimeoutMessage
+from modules.objects import TimeoutMessage
 from typing import List, Dict
 from utils.helpers import date as date_utils
 
@@ -6,7 +6,7 @@ class Pacemaker:
     def __init__(self, sender_id):
         self.current_round:int = 0
         self.last_round_tc:int = 0
-        self.pending_timeouts:Dict(int, TimeoutMessage) = [] # List of timeouts received per round.
+        self.pending_timeouts:Dict[int, TimeoutMessage] = [] # List of timeouts received per round.
         self.timer_start:int = date_utils.getTimeMillis()
 
     def start_timer(self, new_round):
