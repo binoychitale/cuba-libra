@@ -1,73 +1,50 @@
-from modules.objects.timeout_message import TimeoutMessage
+from modules.objects import TimeoutCertificate, TimeoutMessage, TimeoutInfo
 from typing import List, Dict
-from utils.helpers import date as date_utils
+from utils import date as date_utils
 
 class Pacemaker:
-    def __init__(self, sender_id):
+    def __init__(self, sender_id, f):
         self.current_round:int = 0
         self.last_round_tc:int = 0
-        self.pending_timeouts:Dict(int, TimeoutMessage) = [] # List of timeouts received per round.
+        self.pending_timeouts:Dict[int, Dict[int, TimeoutMessage]] = {} # List of timeouts received per round.
         self.timer_start:int = date_utils.getTimeMillis()
+        self.f:int = f
 
     def start_timer(self, new_round):
         self.timer_start = date_utils.getTimeMillis()
         self.current_round = new_round
 
     def local_timeout_round(self):
-        #Safety.increase_last_vote_round(self.current_round)
-        #save_consensus_state()
-        if ()
-        high_qc = None # BlockTree.get_high_qc()
-        timeout_info = 
-        timeout_message = TimeoutMessage(self.current_round, None, sender, None )
-        this.T.push()
+        #TODO save_consensus_state()
+        high_qc = None #TODO BlockTree.get_high_qc()
+        timeout_info = None #TODO safety.make_timeout()
+        return TimeoutMessage(timeout_info, self.last_round_tc, high_qc)
+    
+    def process_remote_timeout(self, timeout_message:TimeoutMessage):
+        tmo_info:TimeoutInfo = timeout_message.tmo_info
+        if tmo_info.round_no < self.current_round:
+            return None
+        if tmo_info.sender not in self.pending_timeouts[tmo_info.round_no]:
+            self.pending_timeouts[tmo_info.round_no][tmo_info.sender] = timeout_message
+        if len(self.pending_timeouts[tmo_info.round_no].keys()) == (self.f + 1):
+            self.start_timer(self.current_round)
+            self.local_timeout_round()
 
+        if len(self.pending_timeouts[tmo_info.round_no].keys()) == (2 * self.f + 1):
+            return TimeoutCertificate() #TODO add implementation here
 
+        return None
+    
+    def advance_round_tc(self, tc):
+        if tc == None or tc.round < self.current_round:
+            return False
+        self.last_round_tc = tc
+        self.start_timer(tc.round + 1)
+        return True
 
-
-
-    def setup(ps:set, id:int):
-        # do any additional setup here
-        self.local_timeout_time =  round(time.time() * 1000)
-    def cs(task):
-      # to enter cs, enque and send request to all, then await replies from all
-        --start
-        reqc = logical_clock()
-        send(('Request', reqc), to=ps)
-
-        await(len(replied) == len(ps))
-
-      # critical section
-        task()
-
-      # to exit cs, deque and send releases to all
-        --release
-        reqc = None
-        send(('Reply', logical_clock()), to=waiting)
-        --end
-        waiting = set()
-        replied = set()
-
-    def run():
-        while(True):
-            -- receive
-            # Check if 30 seconds have elapsed since timer was set
-            if (round(time.time() * 1000) - self.local_timeout_time > 30000) :
-                send(('Message-Local-Timeout', ""), to=self)
-
-    # Have a separate receive handler for each type of message
-
-    def receive(msg=('Message-Local-Timeout', body), from_=source):
-        # Pacemaker handle local timeout
-        print("Timed out locally")
-
-    def receive(msg=('Message-Proposal', body), from_=source):
-        # Handle message proposal
-        print("Proposal received")
-    def receive(msg=('Message-Vote', body), from_=source):
-        # Handle vote message 
-        print("Vote received")
-
-    def receive(msg=('Message-Timeout', body), from_=source):
-        # Handle remote timeout message 
-        print("Timeout received")
+    def advance_round_qc(self, qc):
+        if qc.vote_info.round < self.current_round:
+            return False
+        self.last_round_tc = None
+        self.start_timer(qc.vote_info.round + 1)
+        return True
