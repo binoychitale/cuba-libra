@@ -27,6 +27,7 @@ class Main(process):
     def run():
         while(True):
             -- receive
+            # Check if 30 seconds have elapsed since timer was set
             if (round(time.time() * 1000) - self.local_timeout_time > 30000) :
                 send(('Message-Local-Timeout', ""), to=self)
 
