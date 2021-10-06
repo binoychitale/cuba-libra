@@ -2,32 +2,23 @@ from typing import Any, List
 
 
 class TimeoutCertificate:
-
     def __init__(
-        self,
-        round: int,
-        tmo_high_qc_rounds: List[int],
-        tmo_signatures: List[Any]
+        self, round: int, tmo_high_qc_rounds: List[int], tmo_signatures: List[Any]
     ) -> None:
         self.round = round
-        self.tmo_high_qc_rounds = tmo_high_qc_rounds        
-        self.tmo_signatures = tmo_signatures        
-
+        self.tmo_high_qc_rounds = tmo_high_qc_rounds
+        self.tmo_signatures = tmo_signatures
 
 
 class LedgerCommitInfo:
-    
-    def __init__(
-        self,
-        commit_state_id: int,
-        vote_info_hash: str
-    ) -> None:
-        self.commit_state_id = commit_state_id  # ⊥ if no commit happens when this vote is aggregated to QC
+    def __init__(self, commit_state_id: int, vote_info_hash: str) -> None:
+        self.commit_state_id = (
+            commit_state_id  # ⊥ if no commit happens when this vote is aggregated to QC
+        )
         self.vote_info_hash = vote_info_hash  # Hash of VoteMsg.vote info
 
 
 class VoteInfo:
-
     def __init__(
         self,
         id: int,
@@ -42,16 +33,16 @@ class VoteInfo:
         self.parent_round = parent_round
         self.exec_state_id = exec_state_id
 
+
 class QuorumCertificate:
-    
     def __init__(
         self,
         vote_info: VoteInfo,
         ledger_commit_info: LedgerCommitInfo,
         signatures: List[Any],  # TODO: A quorum of signature,
-        author: Any, # u - The validator that produced the q,
+        author: Any,  # u - The validator that produced the q,
         author_signature,  # ← signu(signatures),
-        ) -> None:
+    ) -> None:
         self.vote_info = vote_info
         self.ledger_commit_info = ledger_commit_info
         self.signatures = signatures
@@ -60,32 +51,31 @@ class QuorumCertificate:
 
 
 class Block:
-    
     def __init__(
-    self,
-    author: Any,  # The author of the block, may not be the same as qc.author after view-change
-    round: int,  # The round that generated this proposal
-    payload: Any,  # Proposed transaction(s)
-    qc: QuorumCertificate,  # QC for parent block
-    id: str,  # A unique digest of author, round, payload, qc.vote info.id and qc.signatures
+        self,
+        author: Any,  # The author of the block, may not be the same as qc.author after view-change
+        round: int,  # The round that generated this proposal
+        payload: Any,  # Proposed transaction(s)
+        qc: QuorumCertificate,  # QC for parent block
+        id: str,  # A unique digest of author, round, payload, qc.vote info.id and qc.signatures
     ) -> None:
-    
+
         self.author = author
         self.round = round
         self.payload = payload
         self.qc = qc
         self.id = id
 
-class TimeoutInfo:
 
+class TimeoutInfo:
     def __init__(
         self,
         round: int,
         high_qc: QuorumCertificate,
         sender: Any,
         signature: Any,
-        ) -> None:
-        
+    ) -> None:
+
         # TODO: Construct timeout info properly
         self.round = round
         self.high_qc = high_qc
@@ -94,14 +84,18 @@ class TimeoutInfo:
 
 
 class TimeoutMessage:
-
-    def __init__(self, tmo_info: TimeoutInfo, last_round_tc: TimeoutCertificate, high_commit_qc: QuorumCertificate) -> None:
+    def __init__(
+        self,
+        tmo_info: TimeoutInfo,
+        last_round_tc: TimeoutCertificate,
+        high_commit_qc: QuorumCertificate,
+    ) -> None:
         self.tmo_info = tmo_info
         self.last_round_tc = last_round_tc
         self.high_commit_qc = high_commit_qc
 
+
 class VoteMsg:
-    
     def __init__(
         self,
         vote_info: VoteInfo,  # A VoteInfo record
@@ -115,25 +109,24 @@ class VoteMsg:
         self.high_commit_qc = high_commit_qc
         self.sender = sender
         self.signature = signature
-        
+
 
 class ProposalMessage:
-    
     def __init__(
-        self, 
-        block: Block, 
-        last_round_tc: TimeoutCertificate, 
+        self,
+        block: Block,
+        last_round_tc: TimeoutCertificate,
         high_commit_qc: QuorumCertificate,
-        signature: Any
-        ) -> None:
-        
+        signature: Any,
+    ) -> None:
+
         self.block = block
         self.last_round_tc = last_round_tc
         self.high_commit_qc = high_commit_qc
         self.signature = signature  # TODO: signu(block.id);
 
-class Certificate:
 
+class Certificate:
     def __init__(self) -> None:
         pass
 
