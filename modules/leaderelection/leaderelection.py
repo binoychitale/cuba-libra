@@ -29,8 +29,7 @@ class LeaderElection:
 
         i = 0
         while i < self.window_size or len(last_authors) < self.exclude_size:
-            # TODO: Assumes below method in Ledger is implemented
-            current_block = ledger.committed_block(current_qc.vote_info.parent_id)
+            current_block = ledger.get_committed_block(current_qc.vote_info.parent_id)
             block_author = current_block.author
 
             if i < self.window_size:
@@ -42,6 +41,7 @@ class LeaderElection:
             i += 1
 
         active_validators = active_validators - last_authors
+        # TODO: Verify seed logic
         random.seed(qc.vote_info.round)
         return random.choice(tuple(active_validators))
 
