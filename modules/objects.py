@@ -183,3 +183,7 @@ class Hasher:
         msg: bytes, engine: Optional[Any] = engine, encoder: Optional[Any] = encoder
     ) -> bytes:
         return engine(msg, encoder=encoder)
+
+class Transaction:
+    def __init__(self, command:str):
+        self.command = command
