@@ -1,4 +1,10 @@
-from typing import Any, List
+from os import stat
+from typing import Any, List, Optional, Tuple
+
+from nacl.encoding import HexEncoder
+from nacl.exceptions import BadSignatureError, CryptoError
+from nacl.hash import sha256
+from nacl.signing import SignedMessage, SigningKey, VerifyKey
 
 
 class TimeoutCertificate:
@@ -134,3 +140,46 @@ class Certificate:
     def is_valid_signatures(block: Block, certificate: TimeoutCertificate) -> bool:
         # TODO: Complete
         return False
+
+
+class Signatures:
+
+    encoder = HexEncoder
+
+    @staticmethod
+    def init_signatures() -> Tuple[SigningKey, VerifyKey]:
+        private_key = SigningKey.generate()
+        public_key = private_key.verify_key
+
+        return private_key, public_key
+
+    @staticmethod
+    def sign_message(
+        msg: bytes, private_key: SigningKey, encoder: Optional[Any] = encoder
+    ) -> SignedMessage:
+        return private_key.sign(msg, encoder=encoder)
+
+    @staticmethod
+    def verify_message(
+        signed_msg: SignedMessage,
+        public_key: VerifyKey,
+        encoder: Optional[Any] = encoder,
+    ) -> bool:
+        try:
+            public_key.verify(signed_msg, encoder=encoder)
+        except (CryptoError, BadSignatureError):
+            return False
+
+        return True
+
+
+class Hasher:
+
+    engine = sha256
+    encoder = HexEncoder
+
+    @staticmethod
+    def hash(
+        msg: bytes, engine: Optional[Any] = engine, encoder: Optional[Any] = encoder
+    ) -> bytes:
+        return engine(msg, encoder=encoder)

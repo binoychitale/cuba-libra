@@ -1,62 +1,21 @@
-import sys
-import time
+import replica
 
-class Main(process):
-    def setup(ps:set, id:int):
-        # do any additional setup here
-        self.local_timeout_time =  round(time.time() * 1000)
-    
-    def cs(task):
-      # to enter cs, enque and send request to all, then await replies from all
-        --start
-        reqc = logical_clock()
-        send(('Request', reqc), to=ps)
 
-        await(len(replied) == len(ps))
-
-      # critical section
-        task()
-
-      # to exit cs, deque and send releases to all
-        --release
-        reqc = None
-        send(('Reply', logical_clock()), to=waiting)
-        --end
-        waiting = set()
-        replied = set()
+class RunDiemBFT(process):
+    def setup(config):
+        self.nreplicas = config["nreplicas"]
 
     def run():
-        while(True):
-            -- receive
-            # Check if 30 seconds have elapsed since timer was set
-            if (round(time.time() * 1000) - self.local_timeout_time > 30000) :
-                send(('Message-Local-Timeout', ""), to=self)
+        replicas = new(replica.Replica, num=nreplicas)
+        for idx, replica in enumerate(replicas):
+            setup({replica}, (replicas - {replica}, idx))
+        start(replicas)
 
-    # Have a separate receive handler for each type of message
-
-    def receive(msg=('Message-Local-Timeout', body), from_=source):
-        # Pacemaker handle local timeout
-        print("Timed out locally")
-
-    def receive(msg=('Message-Proposal', body), from_=source):
-        # Handle message proposal
-        print("Proposal received")
-    def receive(msg=('Message-Vote', body), from_=source):
-        # Handle vote message 
-        print("Vote received")
-
-    def receive(msg=('Message-Timeout', body), from_=source):
-        # Handle remote timeout message 
-        print("Timeout received")
 
 def main():
-    nprocs = int(sys.argv[1]) if len(sys.argv) > 1 else 4
-    config(channel = Fifo)
-    ps = new(Main, num=nprocs)
-    # setup the processes
-    id = 0
-    for p in ps: 
-        setup({p}, (ps-{p}, id))
-        id += 1
-    # start the processes
-    start(ps)
+    config(clock="Lamport")
+    configs = [{"nreplicas": 4}, {"nreplicas": 10}]
+    for config in configs:
+        p = new(RunDiemBFT)
+        setup(p, (config,))
+        start(p)

@@ -1,0 +1,2 @@
+pyDistAlgo==1.0.14
+PyNaCl==1.4.0
