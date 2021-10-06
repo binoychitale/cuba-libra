@@ -1,7 +1,7 @@
 from typing import Union
 
 from modules.block_tree.block_tree import BlockTree
-from modules.leader_election.leader_election import LeaderElection
+from modules.leaderelection.leaderelection import LeaderElection
 from modules.ledger.ledger import Ledger
 from modules.mempool.mempool import MemPool
 from modules.objects import (
