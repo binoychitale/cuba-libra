@@ -184,6 +184,28 @@ class Hasher:
     ) -> bytes:
         return engine(msg, encoder=encoder)
 
+
 class Transaction:
-    def __init__(self, command:str):
+    def __init__(self, command: str):
         self.command = command
+
+
+class EventType:
+    LOCAL_TIMEOUT = "local_timeout"
+    PROPOSAL_MESSAGE = "proposal_message"
+    VOTE_MESSAGE = "vote_message"
+    TIMEOUT_MESSAGE = "timeout_message"
+
+
+class Event:
+    def __init__(self) -> None:
+        pass
+
+    def get_event_type(self) -> EventType:
+        pass
+
+
+class Proposal:
+    def __init__(self) -> None:
+        self.last_round_tc: TimeoutCertificate = None
+        self.block: Block = None

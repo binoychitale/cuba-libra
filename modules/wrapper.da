@@ -1,4 +1,4 @@
-from replica import *
+from validator import *
 
 
 class RunDiemBFT(process):
