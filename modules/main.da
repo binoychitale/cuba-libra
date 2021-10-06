@@ -1,4 +1,4 @@
-import replica
+from replica import *
 
 
 class RunDiemBFT(process):
@@ -6,7 +6,7 @@ class RunDiemBFT(process):
         self.nreplicas = config["nreplicas"]
 
     def run():
-        replicas = new(replica.Replica, num=nreplicas)
+        replicas = new(Replica, num=nreplicas)
         for idx, replica in enumerate(replicas):
             setup({replica}, (replicas - {replica}, idx))
         start(replicas)
