@@ -2,7 +2,7 @@ import sys
 import time
 
 
-class Replica(process):
+class Validator(process):
     def setup(ps: set, id: int):
         # do any additional setup here
         self.local_timeout_time = round(time.time() * 1000)
