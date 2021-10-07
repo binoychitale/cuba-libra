@@ -1,11 +1,23 @@
 import sys
 import time
+from typing import Dict, Tuple
+
+from main.main import Main
+from nacl.signing import SigningKey, VerifyKey
+from safety.safety import Safety
 
 
 class Validator(process):
-    def setup(ps: set, id: int):
+    def setup(
+        ps: set,
+        id: int,
+        key_pair: Tuple[SigningKey, VerifyKey],
+        public_key_map: Dict[int, VerifyKey],
+    ):
         # do any additional setup here
         self.local_timeout_time = round(time.time() * 1000)
+
+        self.safety = Safety()
 
     def cs(task):
         # to enter cs, enque and send request to all, then await replies from all
@@ -27,6 +39,7 @@ class Validator(process):
         replied = set()
 
     def run():
+        exit()
         while True:
             --receive
             # Check if 5 seconds have elapsed since timer was set
@@ -37,7 +50,7 @@ class Validator(process):
 
     def receive(msg=("Message-Local-Timeout", body), from_=source):
         # Pacemaker handle local timeout
-        print(f"Timed out locally at: {self.id}")
+        print(f"Timed out locally at: {id}")
 
     def receive(msg=("Message-Proposal", body), from_=source):
         # Handle message proposal

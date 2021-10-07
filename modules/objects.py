@@ -1,5 +1,5 @@
 from os import stat
-from typing import Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from nacl.encoding import HexEncoder
 from nacl.exceptions import BadSignatureError, CryptoError
@@ -209,3 +209,33 @@ class Proposal:
     def __init__(self) -> None:
         self.last_round_tc: TimeoutCertificate = None
         self.block: Block = None
+
+
+class TestConfig:
+    def __init__(
+        self,
+        nvalidators: int,
+        key_pairs: Tuple[SigningKey, VerifyKey],
+        public_key_map: Dict[int, VerifyKey],
+    ) -> None:
+        self.nvalidators = nvalidators
+        self.key_pairs = key_pairs
+        self.public_key_map = public_key_map
+
+
+def generate_test_configs() -> List[TestConfig]:
+    n_validators = [4, 10]
+    tests = []
+
+    for n in n_validators:
+        key_pairs = {idx: Signatures.init_signatures() for idx in range(n)}
+        public_key_map = {idx: pub_key for idx, (_, pub_key) in key_pairs.items()}
+        tests.append(
+            {
+                "nvalidators": n,
+                "key_pairs": key_pairs,
+                "public_key_map": public_key_map,
+            }
+        )
+
+    return [TestConfig(**config) for config in tests]
