@@ -1,20 +1,31 @@
+from objects import generate_test_configs
 from validator import *
 
 
 class RunDiemBFT(process):
-    def setup(config):
-        self.nreplicas = config["nreplicas"]
+    def setup(test_config: TestConfig):
+        self.test_config = test_config
 
     def run():
-        replicas = new(Replica, num=nreplicas)
-        for idx, replica in enumerate(replicas):
-            setup({replica}, (replicas - {replica}, idx))
-        start(replicas)
+        validators = new(Validator, num=test_config.nvalidators)
+        for idx, validator in enumerate(validators):
+            setup(
+                {
+                    validator,
+                },
+                (
+                    validators - {validator},
+                    idx,
+                    test_config.key_pairs[idx],
+                    test_config.public_key_map,
+                ),
+            )
+        start(validators)
 
 
 def main():
     config(clock="Lamport")
-    configs = [{"nreplicas": 4}, {"nreplicas": 10}]
+    configs = generate_test_configs()
     for config in configs:
         p = new(RunDiemBFT)
         setup(p, (config,))
