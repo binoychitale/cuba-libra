@@ -1,4 +1,4 @@
-from objects import generate_test_configs
+from modules.objects import generate_test_configs
 from validator import *
 
 

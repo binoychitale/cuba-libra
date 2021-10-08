@@ -2,9 +2,9 @@ import sys
 import time
 from typing import Dict, Tuple
 
-from main.main import Main
+from modules.main.main import Main
 from nacl.signing import SigningKey, VerifyKey
-from safety.safety import Safety
+from modules.safety.safety import Safety
 
 
 class Validator(process):

@@ -1,12 +1,11 @@
 from typing import Dict, List
 
 from modules.block_tree.pending_block_tree import PendingBlockTree
-from modules.ledger.ledger import Ledger
 from modules.objects import Block, QuorumCertificate, Transaction, VoteMsg
 
 
 class BlockTree:
-    def __init__(self, ledger: Ledger, f: int, id: int):
+    def __init__(self, ledger, f: int, id: int):
         self.pending_block_tree: PendingBlockTree = PendingBlockTree()
         self.pending_votes: Dict[str, List[VoteMsg]]
         self.high_qc: QuorumCertificate = None
