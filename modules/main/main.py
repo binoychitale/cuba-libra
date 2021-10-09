@@ -20,14 +20,23 @@ from modules.safety.safety import Safety
 
 
 class Main:
-    def __init__(self) -> None:
-        self.block_tree: BlockTree = None
-        self.leader_election: LeaderElection = None
-        self.pacemaker: Pacemaker = None
-        self.safety: Safety = None
-        self.ledger: Ledger = None
+    def __init__(
+        self,
+        block_tree: BlockTree,
+        leader_election: LeaderElection,
+        pacemaker: Pacemaker,
+        safety: Safety,
+        ledger: Ledger,
+        id: int,
+    ) -> None:
+        self.block_tree: BlockTree = block_tree
+        self.leader_election: LeaderElection = leader_election
+        self.pacemaker: Pacemaker = pacemaker
+        self.safety: Safety = safety
+        self.ledger: Ledger = ledger
         self.u = None
         self.mempool: MemPool = None
+        self.id = id
 
     def process_certificate_qc(self, qc: QuorumCertificate) -> None:
         self.block_tree.process_qc(qc)
@@ -113,3 +122,6 @@ class Main:
 
         if event_type == EventType.TIMEOUT_MESSAGE:
             pass
+
+    def check_if_current_leader(self):
+        return self.leader_election.get_leader(self.pacemaker.current_round) == self.id

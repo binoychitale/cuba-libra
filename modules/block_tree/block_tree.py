@@ -49,13 +49,22 @@ class BlockTree:
             return qc
 
     def generate_block(self, txns: List[Transaction], current_round: int):
+        commands = []
+        for trans in txns:
+            commands.append(trans.command)
         return Block(
             self.id,
             current_round,
             txns,
             self.high_qc,
             hash(
-                self.id + current_round + txns + self.high_qc.vote_info.id,
-                self.high_qc.signatures,
+                str(self.id)
+                + str(current_round)
+                + ",".join(commands)
+                + str(self.high_qc.vote_info.id)
+                if self.high_qc
+                else "" + ",".join(self.high_qc.signatures)
+                if self.high_qc is not None
+                else "",
             ),
         )
