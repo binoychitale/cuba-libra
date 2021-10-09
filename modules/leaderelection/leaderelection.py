@@ -1,5 +1,5 @@
 import random
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from modules.ledger.ledger import Ledger
 from modules.objects import QuorumCertificate
@@ -14,14 +14,14 @@ class LeaderElection:
     def __init__(
         self,
         validators: int,
-        # window_size: int,
-        # exclude_size: int,
-        # reputation_leaders: Dict[int, Leader] = {},
+        window_size: Optional[int] = 3,
+        exclude_size: Optional[int] = 10,
+        reputation_leaders: Optional[Dict[int, Leader]] = None,
     ) -> None:
         self.validators = validators
-        self.window_size = 10
-        self.exclude_size = 3
-        self.reputation_leaders = {}
+        self.window_size = window_size
+        self.exclude_size = exclude_size
+        self.reputation_leaders = {} if not reputation_leaders else None
 
     def elect_reputation_leader(self, qc: QuorumCertificate, ledger: Ledger) -> Leader:
         active_validators, last_authors = set(), set()

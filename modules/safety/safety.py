@@ -20,7 +20,7 @@ class Safety:
         private_key: Certificate,
         public_keys: List[Certificate],
         highest_vote_round: Optional[int] = 0,
-        highest_qc_round: Optional[int] = None,
+        highest_qc_round: Optional[int] = 0,
     ) -> None:
         self.private_key = private_key
         self.public_keys = public_keys
