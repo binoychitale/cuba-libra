@@ -1,26 +1,33 @@
 from typing import Any, Dict, List, Union
 
 from modules.block_tree.block_tree import BlockTree
-from modules.objects import Block
+from modules.objects import Block, CommittedBlock, Transaction
 
 
 class Ledger:
     def __init__(self) -> None:
-        self.ledger: List[Block] = []
+        self.ledger: List[CommittedBlock] = []
         # Map of state-id to Pending block
-        self.speculate_states: Dict[str, Block] = []
+        self.speculate_states: Dict[str, str] = {}
 
-    def speculate(self, prev_block_state_id: int, block_id: str, txns: Any) -> int:
-        self.speculate_states[block_id] = hash(prev_block_state_id + txns)
+    def speculate(self, block_id: str, txns: Any) -> int:
+        # TODO change to legit transactions later
+        trans = Transaction("hello")
+        txns = trans.command
+        commit_state_id = (
+            self.ledger[-1].commit_state_id if len(self.ledger) > 0 else ""
+        )
+        self.speculate_states[block_id] = hash(commit_state_id + txns)
 
     def get_pending_state(self, block_id: str) -> Union[int, None]:
+        print(self.speculate_states, block_id)
         return self.speculate_states[block_id]
 
     def commit(self, block_id: str, block_tree: BlockTree):
         block_to_commit = block_tree.pending_block_tree.find(block_id)
         self.ledger.append(block_to_commit)
 
-    def get_committed_block(self, block_id: str) -> Block:
+    def get_committed_block(self, block_id: str) -> CommittedBlock:
         for block in self.ledger:
             if block.id == block_id:
                 return block
