@@ -43,22 +43,24 @@ class Main:
         self.leader_election.update_leaders(qc)
         self.pacemaker.advance_round_qc(qc)
 
-    def process_proposal_msg(self, proposal: Proposal) -> Union[None, VoteMsg]:
-        self.process_certificate_qc(proposal.block.qc)
-        self.process_certificate_qc(proposal.high_commit.qc)
-        self.pacemaker.advance_round_tc(proposal.last_round_tc)
+    def process_proposal_msg(self, proposal: ProposalMessage) -> Union[None, VoteMsg]:
+        if proposal.block.qc:
+            self.process_certificate_qc(proposal.block.qc)
+            self.process_certificate_qc(proposal.high_commit.qc)
+        if proposal.last_round_tc:
+            self.pacemaker.advance_round_tc(proposal.last_round_tc)
 
-        round = self.pacemaker.current_round
-        leader = self.leader_election.get_leader(round)
+        current_round = self.pacemaker.current_round
+        leader = self.leader_election.get_leader(current_round)
 
         if (
-            proposal.block.round != round
-            or proposal.sender != leader
+            proposal.block.round != current_round
+            or proposal.sender_id != leader
             or proposal.block.author != leader
         ):
             return None
 
-        self.block_tree.execute_and_insert(proposal)
+        self.block_tree.execute_and_insert(proposal.block)
         vote_msg = self.safety.make_vote(
             proposal.block,
             proposal.last_round_tc,

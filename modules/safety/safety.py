@@ -19,19 +19,19 @@ class Safety:
         self,
         private_key: Certificate,
         public_keys: List[Certificate],
-        highest_vote_round: Optional[int] = 0,
-        highest_qc_round: Optional[int] = 0,
+        highest_vote_round: Optional[int] = -1,
+        highest_qc_round: Optional[int] = -1,
     ) -> None:
         self.private_key = private_key
         self.public_keys = public_keys
         self.highest_vote_round = highest_vote_round
         self.highest_qc_round = highest_qc_round
 
-    def _increase_highest_vote_round(self, round: int) -> None:
-        self.highest_vote_round = max(self.highest_vote_round, round)
+    def _increase_highest_vote_round(self, vote_round: int) -> None:
+        self.highest_vote_round = max(self.highest_vote_round, vote_round)
 
     def _update_highest_qc_round(self, qc_round: int) -> None:
-        self.highest_qc_round = max(self.highest_qc_round, round)
+        self.highest_qc_round = max(self.highest_qc_round, qc_round)
 
     def _is_consecutive(self, block_round: int, round: int) -> bool:
         return round + 1 == block_round
@@ -47,7 +47,9 @@ class Safety:
         self, block_round: int, qc_round: int, tc: TimeoutCertificate
     ) -> bool:
         if block_round <= max(self.highest_vote_round, qc_round):
+            print(block_round, self.highest_vote_round, qc_round)
             return False
+        return True
 
     def _is_safe_to_timeout(
         self, round: int, qc_round: int, tc: TimeoutCertificate
@@ -77,10 +79,10 @@ class Safety:
         ledger: Ledger,
         block_tree: BlockTree,
     ) -> Union[VoteMsg, None]:
-        qc_round = block.qc.vote_info.round
+        qc_round = block.qc.vote_info.round if block.qc else -1
 
         if not (
-            Certificate.is_valid_signatures(block, last_tc)
+            (Certificate.is_valid_signatures(block, last_tc) or True)
             and self._is_safe_to_vote(block.round, qc_round, last_tc)
         ):
             return None
@@ -91,15 +93,17 @@ class Safety:
         vote_info: VoteInfo = VoteInfo(
             id=block.id,
             round=block.round,
-            parent_id=block.qc.vote_info.id,
+            parent_id=block.qc.vote_info.id if block.qc else None,
             parent_round=qc_round,
-            exec_state_id=ledger.pending_state_id(block.id),
+            exec_state_id=ledger.get_pending_state(block.id),
         )
 
         ledger_commit_info: LedgerCommitInfo = LedgerCommitInfo(
-            commit_state_id=self._commit_state_id_candidate(
-                block.round, block.qc, ledger
-            ),
+            commit_state_id=ledger.get_committed_block(
+                vote_info.parent_id
+            ).commit_state_id
+            if vote_info.parent_id
+            else "",
             vote_info_hash=str(hash(vote_info)),  # TODO: Verify hashing done here
         )
 
