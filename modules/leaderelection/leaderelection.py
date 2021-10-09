@@ -13,15 +13,15 @@ class Leader:
 class LeaderElection:
     def __init__(
         self,
-        validators: List[Leader],
-        window_size: int,
-        exclude_size: int,
-        reputation_leaders: Dict[int, Leader] = {},
+        validators: int,
+        # window_size: int,
+        # exclude_size: int,
+        # reputation_leaders: Dict[int, Leader] = {},
     ) -> None:
         self.validators = validators
-        self.window_size = window_size
-        self.exclude_size = exclude_size
-        self.reputation_leaders = reputation_leaders
+        self.window_size = 10
+        self.exclude_size = 3
+        self.reputation_leaders = {}
 
     def elect_reputation_leader(self, qc: QuorumCertificate, ledger: Ledger) -> Leader:
         active_validators, last_authors = set(), set()
@@ -62,4 +62,4 @@ class LeaderElection:
         if leader:
             return leader
 
-        return self.validators[(round // 2) % len(self.validators)]
+        return (round // 2) % self.validators

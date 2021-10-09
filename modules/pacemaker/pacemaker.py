@@ -10,9 +10,9 @@ from modules.utils import helpers as date_utils
 
 
 class Pacemaker:
-    def __init__(self, sender_id, f) -> None:
+    def __init__(self, f: int) -> None:
         self.current_round: int = 0
-        self.last_round_tc: int = 0
+        self.last_round_tc: TimeoutCertificate = None
         self.pending_timeouts: Dict[
             int, Dict[int, TimeoutMessage]
         ] = {}  # List of timeouts received per round.
