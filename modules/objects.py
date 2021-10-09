@@ -73,6 +73,16 @@ class Block:
         self.id = id
 
 
+class CommittedBlock:
+    def __init__(
+        self,
+        block: Block,
+        commit_state_id: str,  # A unique digest of author, round, payload, qc.vote info.id and qc.signatures
+    ) -> None:
+        self.block = block
+        self.commit_state_id = commit_state_id
+
+
 class TimeoutInfo:
     def __init__(
         self,
@@ -124,12 +134,14 @@ class ProposalMessage:
         last_round_tc: TimeoutCertificate,
         high_commit_qc: QuorumCertificate,
         signature: Any,
+        sender_id: int,
     ) -> None:
 
         self.block = block
         self.last_round_tc = last_round_tc
         self.high_commit_qc = high_commit_qc
         self.signature = signature  # TODO: signu(block.id);
+        self.sender_id = sender_id
 
 
 class Certificate:

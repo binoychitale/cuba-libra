@@ -20,6 +20,7 @@ class Validator(process):
         f: int,
         key_pair: Tuple[SigningKey, VerifyKey],
         public_key_map: Dict[int, VerifyKey],
+        validator_map: Dict[int, Validator],
     ):
         # do any additional setup here
         self.local_timeout_time = round(time.time() * 1000)
@@ -30,19 +31,27 @@ class Validator(process):
         leader_election = LeaderElection(len(public_key_map.keys()))
         pacemaker = Pacemaker(f)
         self.main = Main(block_tree, leader_election, pacemaker, safety, ledger, id)
+        self.validator_id = id
 
     def run():
         while True:
             --receive
             # Check if 5 seconds have elapsed since timer was set
-            if self.main.check_if_current_leader():
+            if (
+                self.main.check_if_current_leader()
+                and self.main.pacemaker.current_round == 0
+            ):
                 # Send a proposal
                 # dummy transaction
                 trans = Transaction("hello")
                 new_block = self.main.block_tree.generate_block(
                     [trans], self.main.pacemaker.current_round
                 )
-                proposal = ProposalMessage(new_block, None, None, None)
+                self.main.block_tree.execute_and_insert(new_block)
+                proposal = ProposalMessage(
+                    new_block, None, None, None, self.validator_id
+                )
+                self.main.pacemaker.start_timer(self.main.pacemaker.current_round + 1)
                 send(("Message-Proposal", proposal), to=self.ps)
 
             if round(time.time() * 1000) - self.local_timeout_time > 5000:
@@ -56,11 +65,16 @@ class Validator(process):
 
     def receive(msg=("Message-Proposal", body), from_=source):
         # Handle message proposal
-        print("Proposal received")
+        print("Proposal received at %s" % (self.validator_id))
+        vote = self.main.process_proposal_msg(body)
+        next_leader = self.main.leader_election.get_leader(
+            self.main.pacemaker.current_round + 1
+        )
+        send(("Message-Vote", vote), to=validator_map[next_leader])
 
     def receive(msg=("Message-Vote", body), from_=source):
         # Handle vote message
-        print("Vote received")
+        print("Vote received at %s" % (self.validator_id))
 
     def receive(msg=("Message-Timeout", body), from_=source):
         # Handle remote timeout message
