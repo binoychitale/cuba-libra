@@ -94,7 +94,9 @@ class Main:
         self.process_certificate_qc(timeout_message.high_commit_qc)
         self.pacemaker.advance_round_tc(timeout_message.last_round_tc)
 
-        timeout_certificate = self.pacemaker.process_remote_timeout(timeout_message)
+        timeout_certificate = self.pacemaker.process_remote_timeout(
+            timeout_message, self.safety, self.block_tree
+        )
 
         if not timeout_certificate:
             return None
