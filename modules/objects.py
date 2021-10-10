@@ -23,6 +23,9 @@ class LedgerCommitInfo:
         )
         self.vote_info_hash = vote_info_hash  # Hash of VoteMsg.vote info
 
+    def fields(self):
+        return (self.commit_state_id, self.vote_info_hash)
+
 
 class VoteInfo:
     def __init__(
@@ -38,6 +41,15 @@ class VoteInfo:
         self.parent_id = parent_id
         self.parent_round = parent_round
         self.exec_state_id = exec_state_id
+
+    def fields(self):
+        return (
+            self.id,
+            self.round,
+            self.parent_id,
+            self.parent_round,
+            self.exec_state_id,
+        )
 
 
 class QuorumCertificate:

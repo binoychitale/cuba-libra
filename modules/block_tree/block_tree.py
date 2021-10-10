@@ -7,7 +7,7 @@ from modules.objects import Block, QuorumCertificate, Transaction, VoteMsg
 class BlockTree:
     def __init__(self, ledger, f: int, id: int):
         self.pending_block_tree: PendingBlockTree = PendingBlockTree()
-        self.pending_votes: Dict[str, List[VoteMsg]]
+        self.pending_votes: Dict[str, List[VoteMsg]] = {}
         self.high_qc: QuorumCertificate = None
         self.high_commit_qc: QuorumCertificate = None
         self.ledger = ledger
@@ -15,18 +15,29 @@ class BlockTree:
         self.id = id
 
     def process_qc(self, qc: QuorumCertificate):
-        if qc.ledger_commit_info.commit_state_id is not None:
-            self.ledger.commit(qc.vote_info.parent_id)
+        if not qc:
+            return None
+        if qc.ledger_commit_info.commit_state_id is not None and (
+            self.high_commit_qc is None
+            or qc.vote_info.round > self.high_commit_qc.vote_info.round
+        ):
+            self.ledger.commit(qc.vote_info.id, self)
             self.pending_block_tree.prune(qc.vote_info)
             self.high_commit_qc = (
                 qc
-                if (self.high_commit_qc is None or qc.round > self.high_commit_qc.round)
+                if (
+                    self.high_commit_qc is None
+                    or qc.vote_info.round > self.high_commit_qc.vote_info.round
+                )
                 else self.high_commit_qc
             )
 
         self.high_qc = (
             qc
-            if (self.high_qc is None or qc.round > self.high_qc.round)
+            if (
+                self.high_qc is None
+                or qc.vote_info.round > self.high_qc.vote_info.round
+            )
             else self.high_qc
         )
 
@@ -37,12 +48,16 @@ class BlockTree:
 
     def process_vote(self, vote: VoteMsg):
         self.process_qc(vote.high_commit_qc)
-        vote_key = hash(vote.ledger_commit_info)
+        vote_key = hash(vote.ledger_commit_info.fields())
+        self.pending_votes[vote_key] = (
+            self.pending_votes[vote_key] if vote_key in self.pending_votes else []
+        )
         self.pending_votes[vote_key].append(vote)
         if len(self.pending_votes[vote_key]) == 2 * self.f + 1:
-            signatures = map(
-                lambda vote_msg: vote_msg.signature, self.pending_votes[vote_key]
-            )
+            # signatures = map(
+            #     lambda vote_msg: vote_msg.signature, self.pending_votes[vote_key]
+            # )
+            signatures = []
             author_sig = ""  # TODO Add author signing mechanism
             qc = QuorumCertificate(
                 vote.vote_info, vote.ledger_commit_info, signatures, self.id, author_sig
