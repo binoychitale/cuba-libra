@@ -163,7 +163,7 @@ class Certificate:
     @staticmethod
     def is_valid_signatures(block: Block, certificate: TimeoutCertificate) -> bool:
         # TODO: Complete
-        return False
+        return True
 
 
 class Signatures:
