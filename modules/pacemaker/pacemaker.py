@@ -20,10 +20,12 @@ class Pacemaker:
         ] = {}  # List of timeouts received per round.
         self.timer_start: int = date_utils.getTimeMillis()
         self.f: int = f
+        self.round_done = False
 
     def start_timer(self, new_round: int) -> None:
         self.timer_start = date_utils.getTimeMillis()
         self.current_round = new_round
+        self.round_done = True
 
     def local_timeout_round(
         self, safety: Safety, block_tree: BlockTree
@@ -36,21 +38,29 @@ class Pacemaker:
         # TODO: Broadcast
         return TimeoutMessage(timeout_info, self.last_round_tc, block_tree.high_qc)
 
+    def extract_high_qc(self, timeout_msg):
+        return timeout_msg.high_qc
+
     def process_remote_timeout(
         self, timeout_message: TimeoutMessage, safety: Safety, block_tree: BlockTree
     ) -> None:
         tmo_info: TimeoutInfo = timeout_message.tmo_info
         if tmo_info.round < self.current_round:
             return None
+        self.pending_timeouts[tmo_info.round] = (
+            self.pending_timeouts[tmo_info.round]
+            if tmo_info.round in self.pending_timeouts
+            else {}
+        )
         if tmo_info.sender not in self.pending_timeouts[tmo_info.round]:
-            self.pending_timeouts[tmo_info.round_no][tmo_info.sender] = timeout_message
+            self.pending_timeouts[tmo_info.round][tmo_info.sender] = timeout_message
         if len(self.pending_timeouts[tmo_info.round].keys()) == (self.f + 1):
             self.start_timer(self.current_round)
             self.local_timeout_round(safety, block_tree)
 
         if len(self.pending_timeouts[tmo_info.round].keys()) == (2 * self.f + 1):
             high_qc_rounds = map(
-                lambda item: item.high_qc, self.pending_timeouts[tmo_info.round]
+                self.extract_high_qc, self.pending_timeouts[tmo_info.round]
             )
             return TimeoutCertificate(
                 tmo_info.round, high_qc_rounds, None
@@ -64,8 +74,9 @@ class Pacemaker:
         return True
 
     def advance_round_qc(self, qc: QuorumCertificate) -> bool:
-        if qc.vote_info.round < self.current_round:
+        qc_round = qc.vote_info.round if qc else -1
+        if qc_round < self.current_round:
             return False
         self.last_round_tc = None
-        self.start_timer(qc.vote_info.round + 1)
+        self.start_timer(qc_round + 1)
         return True

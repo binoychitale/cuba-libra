@@ -25,13 +25,14 @@ class Validator(process):
         # do any additional setup here
         self.local_timeout_time = round(time.time() * 1000)
 
-        self.safety = Safety(key_pair[0], key_pair[1])
+        self.safety = Safety(key_pair[0], key_pair[1], id)
         ledger = Ledger()
         block_tree = BlockTree(ledger, f, id)
         leader_election = LeaderElection(len(public_key_map.keys()))
         pacemaker = Pacemaker(f)
         self.main = Main(block_tree, leader_election, pacemaker, safety, ledger, id)
         self.validator_id = id
+        self.round_done = False
 
     def run():
         while True:
@@ -45,16 +46,26 @@ class Validator(process):
                 send(
                     ("Message-Proposal", self.main.get_next_proposal(None)), to=self.ps
                 )
-
-            if round(time.time() * 1000) - self.local_timeout_time > 5000:
-                send(("Message-Local-Timeout", ""), to=self)
+            if await (self.main.round_done):
+                self.main.round_done = False
+            elif timeout(5):
+                print(
+                    "Local timeout at %s for round %s"
+                    % (self.validator_id, self.main.pacemaker.current_round)
+                )
+                recv_set = ps
+                ps.add(self)
+                send(
+                    (
+                        "Message-Timeout",
+                        self.main.pacemaker.local_timeout_round(
+                            self.main.safety, self.main.block_tree
+                        ),
+                    ),
+                    to=ps,
+                )
 
     # Have a separate receive handler for each type of message
-
-    def receive(msg=("Message-Local-Timeout", body), from_=source):
-        # Pacemaker handle local timeout
-        print(f"Timed out locally at: {id}")
-
     def receive(msg=("Message-Proposal", body), from_=source):
         # Handle message proposal
         print(
@@ -84,4 +95,13 @@ class Validator(process):
 
     def receive(msg=("Message-Timeout", body), from_=source):
         # Handle remote timeout message
-        print("Timeout received")
+        print(f"Timeout received at: {id}")
+        new_proposal = self.main.process_timeout_msg(body)
+        if new_proposal is not None:
+            print(
+                f"Timeout certificate at: {id} for round {new_proposal.last_round_tc.round}"
+            )
+            send(
+                ("Message-Proposal", new_proposal),
+                to=ps,
+            )

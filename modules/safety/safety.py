@@ -19,6 +19,7 @@ class Safety:
         self,
         private_key: Certificate,
         public_keys: List[Certificate],
+        id,
         highest_vote_round: Optional[int] = -1,
         highest_qc_round: Optional[int] = -1,
     ) -> None:
@@ -26,6 +27,7 @@ class Safety:
         self.public_keys = public_keys
         self.highest_vote_round = highest_vote_round
         self.highest_qc_round = highest_qc_round
+        self.id = id
 
     def _increase_highest_vote_round(self, vote_round: int) -> None:
         self.highest_vote_round = max(self.highest_vote_round, vote_round)
@@ -58,9 +60,9 @@ class Safety:
         ):
             return False
 
-        return self._is_consecutive(round, qc_round) or self._is_consecutive(
-            round, tc.round
-        )
+        return (
+            qc_round == -1 or self._is_consecutive(round, qc_round)
+        ) or self._is_consecutive(round, tc.round)
 
     def _commit_state_id_candidate(
         self, block_round: int, qc: QuorumCertificate, ledger: Ledger
@@ -81,7 +83,7 @@ class Safety:
         qc_round = block.qc.vote_info.round if block.qc else -1
 
         if not (
-            (Certificate.is_valid_signatures(block, last_tc) or True)
+            Certificate.is_valid_signatures(block, last_tc)
             and self._is_safe_to_vote(block.round, qc_round, last_tc)
         ):
             return None
@@ -121,14 +123,18 @@ class Safety:
         self, round: int, high_qc: QuorumCertificate, last_tc: TimeoutCertificate
     ) -> Union[TimeoutInfo, None]:
 
-        qc_round = high_qc.vote_info.round
+        qc_round = high_qc.vote_info.round if high_qc else -1
 
         if not (
             Certificate.is_valid_signatures(high_qc, last_tc)
             and self._is_safe_to_timeout(round, qc_round, last_tc)
         ):
+            print(
+                Certificate.is_valid_signatures(high_qc, last_tc),
+                self._is_safe_to_timeout(round, qc_round, last_tc),
+            )
             return None
 
         self._increase_highest_vote_round(round)
         # TODO: Construct timeout info properly
-        return TimeoutInfo(round, high_qc, sender=None, signature=None)
+        return TimeoutInfo(round, high_qc, sender=self.id, signature=None)

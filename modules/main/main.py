@@ -38,6 +38,7 @@ class Main:
         self.u = None
         self.mempool: MemPool = None
         self.id = id
+        self.round_done = False
 
     def process_certificate_qc(self, qc: QuorumCertificate) -> None:
         self.block_tree.process_qc(qc)
@@ -79,32 +80,35 @@ class Main:
 
     def process_new_round_event(self, last_tc: TimeoutCertificate) -> None:
         # TODO: Identify and use U
-        if self.u == self.leader_election.get_leader(self.pacemaker.current_round):
+        if self.id == self.leader_election.get_leader(self.pacemaker.current_round):
             # TODO: Leader code - generate proposal
-
-            b = self.block_tree.generate_block(
-                self.mempool.get_transactions(), self.pacemaker.current_round
-            )
+            trans = Transaction("hello")
+            # b = self.block_tree.generate_block(
+            #     self.mempool.get_transactions(), self.pacemaker.current_round
+            # )
+            b = self.block_tree.generate_block([trans], self.pacemaker.current_round)
 
             # TODO: Broadcast and fix signature
             return ProposalMessage(
-                b, last_tc, self.block_tree.high_commit_qc, signature=None
+                b,
+                last_tc,
+                self.block_tree.high_commit_qc,
+                signature=None,
+                sender_id=self.id,
             )
 
     def process_timeout_msg(self, timeout_message: TimeoutMessage) -> None:
         self.process_certificate_qc(timeout_message.tmo_info.high_qc)
         self.process_certificate_qc(timeout_message.high_commit_qc)
         self.pacemaker.advance_round_tc(timeout_message.last_round_tc)
-
         timeout_certificate = self.pacemaker.process_remote_timeout(
             timeout_message, self.safety, self.block_tree
         )
-
         if not timeout_certificate:
             return None
 
         self.pacemaker.advance_round_tc(timeout_certificate)
-        self.process_new_round_event(timeout_certificate)
+        return self.process_new_round_event(timeout_certificate)
 
     def process_vote_msg(self, vote_message: VoteMsg) -> None:
         qc = self.block_tree.process_vote(vote_message)
@@ -141,5 +145,4 @@ class Main:
         )
         self.block_tree.execute_and_insert(new_block)
         self.pacemaker.start_timer(self.pacemaker.current_round + 1)
-
         return ProposalMessage(new_block, None, new_qc, None, self.id)
