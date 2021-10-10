@@ -47,7 +47,6 @@ class Safety:
         self, block_round: int, qc_round: int, tc: TimeoutCertificate
     ) -> bool:
         if block_round <= max(self.highest_vote_round, qc_round):
-            print(block_round, self.highest_vote_round, qc_round)
             return False
         return True
 
@@ -104,7 +103,9 @@ class Safety:
             ).commit_state_id
             if vote_info.parent_id
             else "",
-            vote_info_hash=str(hash(vote_info)),  # TODO: Verify hashing done here
+            vote_info_hash=str(
+                hash(vote_info.fields())
+            ),  # TODO: Verify hashing done here
         )
 
         # TODO: Complete sender and signature for votemsg

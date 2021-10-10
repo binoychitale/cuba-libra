@@ -12,6 +12,7 @@ class PendingBlockTree:
         for block in self.tree:
             if (
                 vote_info.id == block.id
+                or block.qc is None
                 or block.qc.vote_info.parent_id != vote_info.parent_id
             ):
                 pruned_tree.append(block)

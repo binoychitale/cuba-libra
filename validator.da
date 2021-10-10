@@ -42,17 +42,9 @@ class Validator(process):
                 and self.main.pacemaker.current_round == 0
             ):
                 # Send a proposal
-                # dummy transaction
-                trans = Transaction("hello")
-                new_block = self.main.block_tree.generate_block(
-                    [trans], self.main.pacemaker.current_round
+                send(
+                    ("Message-Proposal", self.main.get_next_proposal(None)), to=self.ps
                 )
-                self.main.block_tree.execute_and_insert(new_block)
-                proposal = ProposalMessage(
-                    new_block, None, None, None, self.validator_id
-                )
-                self.main.pacemaker.start_timer(self.main.pacemaker.current_round + 1)
-                send(("Message-Proposal", proposal), to=self.ps)
 
             if round(time.time() * 1000) - self.local_timeout_time > 5000:
                 send(("Message-Local-Timeout", ""), to=self)
@@ -65,16 +57,30 @@ class Validator(process):
 
     def receive(msg=("Message-Proposal", body), from_=source):
         # Handle message proposal
-        print("Proposal received at %s" % (self.validator_id))
+        print(
+            "Proposal received at %s for round %s"
+            % (self.validator_id, self.main.pacemaker.current_round)
+        )
         vote = self.main.process_proposal_msg(body)
         next_leader = self.main.leader_election.get_leader(
-            self.main.pacemaker.current_round + 1
+            self.main.pacemaker.current_round
         )
+        print("VOTE", vote)
         send(("Message-Vote", vote), to=validator_map[next_leader])
 
     def receive(msg=("Message-Vote", body), from_=source):
         # Handle vote message
-        print("Vote received at %s" % (self.validator_id))
+        print(
+            "Vote received at %s for round %s"
+            % (self.validator_id, self.main.pacemaker.current_round)
+        )
+        new_qc = self.main.process_vote_msg(body)
+        if new_qc:
+            next_proposal = self.main.get_next_proposal(new_qc)
+            send(
+                ("Message-Proposal", next_proposal),
+                to=self.ps,
+            )
 
     def receive(msg=("Message-Timeout", body), from_=source):
         # Handle remote timeout message
