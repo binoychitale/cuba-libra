@@ -12,7 +12,7 @@ class Ledger:
 
     def speculate(self, block_id: str, txns: Any) -> int:
         # TODO change to legit transactions later
-        trans = Transaction("hello")
+        trans = Transaction("hello", "", 0)
         txns = trans.command
         commit_state_id = (
             self.ledger[-1].commit_state_id if len(self.ledger) > 0 else ""
