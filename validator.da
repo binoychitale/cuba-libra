@@ -11,6 +11,9 @@ from modules.main.main import Main
 from modules.objects import ProposalMessage, Transaction
 from modules.pacemaker.pacemaker import Pacemaker
 from modules.safety.safety import Safety
+from modules.mempool.mempool import MemPool
+
+client = import_da('client')
 
 
 class Validator(process):
@@ -21,6 +24,7 @@ class Validator(process):
         key_pair: Tuple[SigningKey, VerifyKey],
         public_key_map: Dict[int, VerifyKey],
         validator_map: Dict[int, Validator],
+        client_map: Dict[int, client.Client],
     ):
         # do any additional setup here
         self.local_timeout_time = round(time.time() * 1000)
@@ -30,9 +34,11 @@ class Validator(process):
         block_tree = BlockTree(ledger, f, id)
         leader_election = LeaderElection(len(public_key_map.keys()))
         pacemaker = Pacemaker(f)
-        self.main = Main(block_tree, leader_election, pacemaker, safety, ledger, id)
+        self.mempool = MemPool()
+        self.main = Main(block_tree, leader_election, pacemaker, safety, ledger, mempool, id)
         self.validator_id = id
         self.round_done = False
+        self.client_map = client_map
 
     def run():
         while True:
@@ -41,12 +47,16 @@ class Validator(process):
             if (
                 self.main.check_if_current_leader()
                 and self.main.pacemaker.current_round == 0
+                and len(self.mempool.queue) == self.main.block_tree.block_size
             ):
+                output("Creating Initial Proposal")
                 # Send a proposal
-                send(
-                    ("Message-Proposal", self.main.get_next_proposal(None)), to=self.ps
-                )
-            if await (self.main.round_done):
+                proposal = self.main.get_next_proposal(None)
+                if proposal:
+                    send(
+                        ("Message-Proposal", proposal), to=self.ps
+                    )
+            if await (self.main.round_done or len(self.mempool.queue) == self.main.block_tree.block_size):
                 self.main.round_done = False
             elif timeout(5):
                 print(
@@ -66,32 +76,48 @@ class Validator(process):
                 )
 
     # Have a separate receive handler for each type of message
-    def receive(msg=("Message-Proposal", body), from_=source):
+
+    def receive(msg=("Client-Transaction", body), from_=source):
+        #output("Received {} at validator {}".format(body, self.validator_id))
+        self.mempool.queue[body.id] = body
+        output("Mempool size {}", len(self.mempool.queue))
+
+    def receive(msg=("Message-Proposal", proposal), from_=source):
         # Handle message proposal
         print(
             "Proposal received at %s for round %s"
             % (self.validator_id, self.main.pacemaker.current_round)
         )
-        vote = self.main.process_proposal_msg(body)
+        vote = self.main.process_proposal_msg(proposal)
         next_leader = self.main.leader_election.get_leader(
             self.main.pacemaker.current_round
         )
         print("VOTE", vote)
-        send(("Message-Vote", vote), to=validator_map[next_leader])
+        send(("Message-Vote", (vote, proposal)), to=validator_map[next_leader])
 
     def receive(msg=("Message-Vote", body), from_=source):
+        vote, proposal = body[0], body[1]
         # Handle vote message
         print(
             "Vote received at %s for round %s"
             % (self.validator_id, self.main.pacemaker.current_round)
         )
-        new_qc = self.main.process_vote_msg(body)
+        new_qc = self.main.process_vote_msg(vote)
         if new_qc:
+            trx_client_map = self.main.deque_trx(proposal)
+            for trx_id, client_id in trx_client_map.items():
+                send(
+                    ("Client-Reply", trx_id),
+                    to=self.client_map[client_id],
+                )
+            
             next_proposal = self.main.get_next_proposal(new_qc)
-            send(
-                ("Message-Proposal", next_proposal),
-                to=self.ps,
-            )
+            if next_proposal:
+                send(
+                    ("Message-Proposal", next_proposal),
+                    to=self.ps,
+                )
+
 
     def receive(msg=("Message-Timeout", body), from_=source):
         # Handle remote timeout message

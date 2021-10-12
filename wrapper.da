@@ -1,5 +1,6 @@
 from modules.objects import generate_test_configs
 from validator import *
+from client import Client
 
 
 class RunDiemBFT(process):
@@ -9,7 +10,9 @@ class RunDiemBFT(process):
     def run():
         f = (test_config.nvalidators - 1) // 3
         validators = new(Validator, num=test_config.nvalidators)
+        clients = new(Client, num=test_config.num_clients)
         validator_map = {idx: validator for idx, validator in enumerate(validators)}
+        client_map = {idx: client for idx, client in enumerate(clients)}
         for idx, validator in enumerate(validators):
             setup(
                 {
@@ -19,13 +22,28 @@ class RunDiemBFT(process):
                     validators - {validator},
                     idx,
                     f,
-                    test_config.key_pairs[idx],
-                    test_config.public_key_map,
+                    test_config.validator_key_pairs[idx],
+                    test_config.validator_pubkey_map,
                     validator_map,
+                    client_map
                 ),
             )
+        for idx, client in enumerate(clients):
+            setup(
+                {
+                    client,
+                },
+                (
+                    idx,
+                    f,
+                    test_config.client_key_pairs[idx],
+                    test_config.client_pubkey_map,
+                    validator_map,
+                    client_map
+                )
+            )
         start(validators)
-
+        start(clients)
 
 def main():
     config(clock="Lamport")
