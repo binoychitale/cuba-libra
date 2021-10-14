@@ -1,6 +1,6 @@
 import sys
 import time
-from typing import Dict, Tuple, List
+from typing import Dict, List, Tuple
 
 from nacl import encoding
 from nacl.signing import SignedMessage, SigningKey, VerifyKey
@@ -9,6 +9,7 @@ from modules.block_tree.block_tree import BlockTree
 from modules.leaderelection.leaderelection import LeaderElection
 from modules.ledger.ledger import Ledger
 from modules.main.main import Main
+from modules.mempool.mempool import MemPool
 from modules.objects import (
     MsgType,
     ProposalMessage,
@@ -19,9 +20,8 @@ from modules.objects import (
 )
 from modules.pacemaker.pacemaker import Pacemaker
 from modules.safety.safety import Safety
-from modules.mempool.mempool import MemPool
 
-client = import_da('client')
+client = import_da("client")
 
 
 class Validator(process):
@@ -44,8 +44,10 @@ class Validator(process):
         leader_election = LeaderElection(len(public_key_map.keys()))
         pacemaker = Pacemaker(f, id)
         self.mempool = MemPool()
-        self.main = Main(block_tree, leader_election, pacemaker, safety, ledger, mempool, id)
-        
+        self.main = Main(
+            block_tree, leader_election, pacemaker, safety, ledger, mempool, id
+        )
+
         self.validator_id = id
         self.round_done = False
         self.client_map = client_map
@@ -68,7 +70,7 @@ class Validator(process):
                             "Message-Proposal",
                             (proposal.create_signed_payload(key_pair[0])),
                         ),
-                        to=self.ps
+                        to=self.ps,
                     )
             if await (self.main.round_done or len(self.mempool.queue) > 0):
                 self.main.round_done = False
@@ -92,9 +94,9 @@ class Validator(process):
     # Have a separate receive handler for each type of message
 
     def receive(msg=("Client-Transaction", body), from_=source):
-        #output("Received {} at validator {}".format(body, self.validator_id))
+        # output("Received {} at validator {}".format(body, self.validator_id))
         self.mempool.queue[body.id] = body
-        #output("Mempool size {}", len(self.mempool.queue))
+        # output("Mempool size {}", len(self.mempool.queue))
 
     def receive(msg=("Message-Proposal", body), from_=source):
         # Handle message proposal
@@ -102,28 +104,36 @@ class Validator(process):
             "Proposal received at: %s for round: %s"
             % (self.validator_id, self.main.pacemaker.current_round)
         )
-        
+
         proposal: ProposalMessage = body[0]
         signed_proposal: SignedMessage = body[1]
         if not proposal.verify_signed_payload(
             signed_proposal, validator_keypair_map[proposal.sender_id][1]
         ):
             raise Exception("There is an imposter among us !!")
-        
+
         vote: VoteMsg = self.main.process_proposal_msg(proposal)
         next_leader = self.main.leader_election.get_leader(
             self.main.pacemaker.current_round
         )
-        #print("VOTE", vote, "Round", self.main.pacemaker.current_round, "Next Leader:", next_leader, "Validator:",self.validator_id)
+        # print("VOTE", vote, "Round", self.main.pacemaker.current_round, "Next Leader:", next_leader, "Validator:",self.validator_id)
         if vote:
             send(
-                ("Message-Vote", (vote.create_signed_payload(key_pair[0]), proposal.trx_ids)),
+                (
+                    "Message-Vote",
+                    (vote.create_signed_payload(key_pair[0]), proposal.trx_ids),
+                ),
                 to=validator_map[next_leader],
             )
         else:
             output(
                 "Ledger: ",
-                list(([trx.command for trx in cb.block.payload] for cb in self.main.ledger.ledger)),
+                list(
+                    (
+                        [trx.command for trx in cb.block.payload]
+                        for cb in self.main.ledger.ledger
+                    )
+                ),
                 "Validator {}".format(self.validator_id),
             )
             output("Rounds: ", [cb.block.round for cb in self.main.ledger.ledger])
@@ -138,7 +148,9 @@ class Validator(process):
             % (self.validator_id, self.main.pacemaker.current_round, vote.sender)
         )
 
-        if not vote.verify_signed_payload(signed_vote, validator_keypair_map[vote.sender][1]):
+        if not vote.verify_signed_payload(
+            signed_vote, validator_keypair_map[vote.sender][1]
+        ):
             raise Exception("There is an imposter among us !!")
 
         new_qc = self.main.process_vote_msg(vote)
@@ -149,11 +161,11 @@ class Validator(process):
                     ("Client-Reply", (trx_id, self.validator_id)),
                     to=self.client_map[client_id],
                 )
-            
+
             send(
-                    ("Deque-Transaction", trx_ids),
-                    to=self.ps,
-                )
+                ("Deque-Transaction", trx_ids),
+                to=self.ps,
+            )
             """await(some(received(('Dequed', id)), has = (
                 id == self.main.leader_election.get_leader(self.main.pacemaker.current_round)
             )))"""
@@ -163,7 +175,7 @@ class Validator(process):
                     num_received += 1
                 elif timeout(5):
                     break"""
-            
+
             next_proposal = self.main.get_next_proposal(new_qc)
             if next_proposal:
                 send(
@@ -174,12 +186,18 @@ class Validator(process):
                     to=self.ps,
                 )
             else:
-                output("Ledger: ", [trx.command for trx in self.main.ledger.ledger[-1].block.payload], "Round {}, Validator {}".format(self.main.pacemaker.current_round, self.validator_id))
-    
+                output(
+                    "Ledger: ",
+                    [trx.command for trx in self.main.ledger.ledger[-1].block.payload],
+                    "Round {}, Validator {}".format(
+                        self.main.pacemaker.current_round, self.validator_id
+                    ),
+                )
+
     def receive(msg=("Deque-Transaction", trx_ids), from_=source):
         trx_client_map = self.main.deque_trx(trx_ids)
-        #send(('Dequed', self.validator_id), to=source)
-        #send(('Dequed'), to=source)
+        # send(('Dequed', self.validator_id), to=source)
+        # send(('Dequed'), to=source)
 
         for trx_id, client_id in trx_client_map.items():
             send(
