@@ -1,6 +1,13 @@
-from modules.objects import generate_test_configs
-from validator import *
 from client import Client
+from modules.fault_injection.fault_injection import ValidatorFI
+from modules.objects import (
+    FailType,
+    Failure,
+    FailureConfig,
+    MsgType,
+    generate_test_configs,
+)
+from validator import *
 
 
 class RunDiemBFT(process):
@@ -9,14 +16,70 @@ class RunDiemBFT(process):
 
     def run():
         f = (test_config.nvalidators - 1) // 3
-        validators = new(Validator, num=test_config.nvalidators)
+        failure_config = FailureConfig(
+            failures=[
+                Failure(
+                    src=0,
+                    dest="_",
+                    msg_type=MsgType.Wildcard,
+                    round=1,
+                    prob=1,
+                    fail_type=FailType.MsgLoss,
+                    val=1000,
+                    attr=None,
+                ),
+                Failure(
+                    src=1,
+                    dest="_",
+                    msg_type=MsgType.Wildcard,
+                    round=1,
+                    prob=1,
+                    fail_type=FailType.MsgLoss,
+                    val=1000,
+                    attr=None,
+                ),
+                # Failure(
+                #     src="_",
+                #     dest="leader",
+                #     msg_type=MsgType.Vote,
+                #     round=1,
+                #     prob=1,
+                #     fail_type=FailType.Delay,
+                #     val=1000,
+                #     attr=None,
+                # ),
+                # Failure(
+                #     src=2,
+                #     dest="_",
+                #     msg_type=MsgType.Wildcard,
+                #     round=3,
+                #     prob=0.5,
+                #     fail_type=FailType.MsgLoss,
+                #     attr=None,
+                #     val=None,
+                # ),
+                # Failure(
+                #     src="leader",
+                #     dest="_",
+                #     msg_type=MsgType.Vote,
+                #     round=3,
+                #     prob=0.5,
+                #     fail_type=FailType.SetAttr,
+                #     val=2,
+                #     attr="highest_vote_round",
+                # ),
+            ],
+            seed=12345678,
+        )
+        validators = new(ValidatorFI, num=test_config.nvalidators)
         clients = new(Client, num=test_config.num_clients)
         validator_map = {idx: validator for idx, validator in enumerate(validators)}
         validator_keypair_map = {
-            idx: test_config.validator_key_pairs[idx] for idx, _ in enumerate(validators)
+            idx: test_config.validator_key_pairs[idx]
+            for idx, _ in enumerate(validators)
         }
         client_map = {idx: client for idx, client in enumerate(clients)}
-        
+
         for idx, validator in enumerate(validators):
             setup(
                 {
@@ -31,6 +94,7 @@ class RunDiemBFT(process):
                     validator_map,
                     validator_keypair_map,
                     client_map,
+                    failure_config,
                 ),
             )
         for idx, client in enumerate(clients):
@@ -44,11 +108,12 @@ class RunDiemBFT(process):
                     test_config.client_key_pairs[idx],
                     test_config.client_pubkey_map,
                     validator_map,
-                    client_map
-                )
+                    client_map,
+                ),
             )
         start(validators)
         start(clients)
+
 
 def main():
     config(clock="Lamport")

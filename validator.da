@@ -10,6 +10,7 @@ from modules.leaderelection.leaderelection import LeaderElection
 from modules.ledger.ledger import Ledger
 from modules.main.main import Main
 from modules.objects import (
+    MsgType,
     ProposalMessage,
     Signatures,
     TimeoutMessage,
@@ -210,3 +211,21 @@ class Validator(process):
                 ),
                 to=ps,
             )
+
+    def get_validator_id():
+        return self.validator_id
+
+    def get_leader():
+        self.main.leader_election.get_leader(self.main.pacemaker.current_round)
+
+    def get_current_round():
+        return self.main.pacemaker.current_round
+
+    def set_current_round(round):
+        self.main.pacemaker.current_round = round
+
+    def set_highest_vote_count(highest_vote_round):
+        self.main.safety.highest_vote_round = highest_vote_round
+
+    def get_validator_map():
+        return self.validator_map

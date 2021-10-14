@@ -1,3 +1,5 @@
+from collections import namedtuple
+from enum import Enum
 from os import stat
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -365,3 +367,24 @@ def generate_test_configs() -> List[TestConfig]:
         )
 
     return [TestConfig(**config) for config in tests]
+
+
+class MsgType(Enum):
+    Proposal = 1
+    QC = 2
+    TimeOut = 3
+    Vote = 4
+    Wildcard = 5  # matches all message types
+
+
+class FailType(Enum):
+    MsgLoss = 1
+    Delay = 2
+    SetAttr = 3
+
+
+FailureConfig = namedtuple("FailureConfig", ["failures", "seed"])
+Failure = namedtuple(
+    "Failure",
+    ["src", "dest", "msg_type", "round", "prob", "fail_type", "val", "attr"],
+)
