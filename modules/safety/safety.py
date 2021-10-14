@@ -115,7 +115,7 @@ class Safety:
             vote_info,
             ledger_commit_info,
             block_tree.high_commit_qc,
-            sender=None,
+            sender=self.id,
             signature=None,
         )
 

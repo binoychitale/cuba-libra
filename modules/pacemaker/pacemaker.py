@@ -12,7 +12,7 @@ from modules.utils import helpers as date_utils
 
 
 class Pacemaker:
-    def __init__(self, f: int) -> None:
+    def __init__(self, f: int, id: int) -> None:
         self.current_round: int = 0
         self.last_round_tc: TimeoutCertificate = None
         self.pending_timeouts: Dict[
@@ -21,6 +21,7 @@ class Pacemaker:
         self.timer_start: int = date_utils.getTimeMillis()
         self.f: int = f
         self.round_done = False
+        self.id = id
 
     def start_timer(self, new_round: int) -> None:
         self.timer_start = date_utils.getTimeMillis()
@@ -36,7 +37,9 @@ class Pacemaker:
         )
 
         # TODO: Broadcast
-        return TimeoutMessage(timeout_info, self.last_round_tc, block_tree.high_qc)
+        return TimeoutMessage(
+            timeout_info, self.last_round_tc, block_tree.high_qc, self.id
+        )
 
     def extract_high_qc(self, timeout_msg):
         return timeout_msg.high_qc

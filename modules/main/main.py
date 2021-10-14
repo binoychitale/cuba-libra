@@ -78,7 +78,7 @@ class Main:
         self.pacemaker.start_timer(self.pacemaker.current_round + 1)
         return vote_msg
 
-    def process_new_round_event(self, last_tc: TimeoutCertificate) -> None:
+    def process_new_round_event(self, last_tc: TimeoutCertificate) -> ProposalMessage:
         # TODO: Identify and use U
         if self.id == self.leader_election.get_leader(self.pacemaker.current_round):
             # TODO: Leader code - generate proposal
@@ -97,7 +97,7 @@ class Main:
                 sender_id=self.id,
             )
 
-    def process_timeout_msg(self, timeout_message: TimeoutMessage) -> None:
+    def process_timeout_msg(self, timeout_message: TimeoutMessage) -> ProposalMessage:
         self.process_certificate_qc(timeout_message.tmo_info.high_qc)
         self.process_certificate_qc(timeout_message.high_commit_qc)
         self.pacemaker.advance_round_tc(timeout_message.last_round_tc)
@@ -137,7 +137,7 @@ class Main:
     def check_if_current_leader(self):
         return self.leader_election.get_leader(self.pacemaker.current_round) == self.id
 
-    def get_next_proposal(self, new_qc):
+    def get_next_proposal(self, new_qc) -> ProposalMessage:
         # dummy transaction
         trans = Transaction("hello")
         new_block = self.block_tree.generate_block(
