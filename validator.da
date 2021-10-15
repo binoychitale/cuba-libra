@@ -33,7 +33,7 @@ class Validator(process):
         # do any additional setup here
         self.local_timeout_time = round(time.time() * 1000)
 
-        self.safety = Safety(key_pair[0], key_pair[1], id)
+        self.safety = Safety(key_pair[0], kv_pairs_map, id)
         ledger = Ledger(id)
         block_tree = BlockTree(ledger, f, id)
         leader_election = LeaderElection(len(public_key_map.keys()))
@@ -46,19 +46,19 @@ class Validator(process):
         while True:
             --receive
             # Check if 5 seconds have elapsed since timer was set
-            if (
-                self.main.check_if_current_leader()
-                and self.main.pacemaker.current_round == 0
-            ):
-                # Send a proposal
-                proposal: ProposalMessage = self.main.get_next_proposal(None)
-                send(
-                    (
-                        "Message-Proposal",
-                        (proposal.create_signed_payload(key_pair[0])),
-                    ),
-                    to=self.ps,
-                )
+            # if (
+            #     self.main.check_if_current_leader()
+            #     and self.main.pacemaker.current_round == 0
+            # ):
+            #     # Send a proposal
+            #     proposal: ProposalMessage = self.main.get_next_proposal(None)
+            #     send(
+            #         (
+            #             "Message-Proposal",
+            #             (proposal.create_signed_payload(key_pair[0])),
+            #         ),
+            #         to=self.ps,
+            #     )
 
             if await (self.main.round_done):
                 self.main.round_done = False
@@ -74,11 +74,10 @@ class Validator(process):
                 timeout_msg: TimeoutMessage = self.main.pacemaker.local_timeout_round(
                     self.main.safety, self.main.block_tree
                 )
-
                 send(
                     (
                         "Message-Timeout",
-                        (timeout_msg._sign_timeout_msg(key_pair[0])),
+                        (timeout_msg.create_signed_payload(key_pair[0])),
                     ),
                     to=ps,
                 )
@@ -102,10 +101,11 @@ class Validator(process):
         next_leader = self.main.leader_election.get_leader(
             self.main.pacemaker.current_round
         )
-        send(
-            ("Message-Vote", (vote.create_signed_payload(key_pair[0]))),
-            to=validator_map[next_leader],
-        )
+        if vote:
+            send(
+                ("Message-Vote", (vote.create_signed_payload(key_pair[0]))),
+                to=validator_map[next_leader],
+            )
 
     def receive(msg=("Message-Vote", body), from_=source):
         # Handle vote message
@@ -133,7 +133,16 @@ class Validator(process):
     def receive(msg=("Message-Timeout", body), from_=source):
         # Handle remote timeout message
         print(f"Timeout received at: {id}")
-        new_proposal = self.main.process_timeout_msg(body)
+
+        timeout_msg: TimeoutMessage = body[0]
+        signed_timeout: SignedMessage = body[1]
+
+        if not timeout_msg.verify_signed_payload(
+            signed_timeout, kv_pairs_map[timeout_msg.id][1]
+        ):
+            raise Exception("There is an imposter among us !!")
+
+        new_proposal = self.main.process_timeout_msg(timeout_msg)
         if new_proposal is not None:
             print(
                 f"Timeout certificate at: {id} for round {new_proposal.last_round_tc.round}"

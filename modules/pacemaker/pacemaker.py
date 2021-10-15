@@ -44,6 +44,9 @@ class Pacemaker:
     def extract_high_qc(self, timeout_msg):
         return timeout_msg.high_qc
 
+    def extract_timeout_signatures(self, timeout_msg):
+        return (timeout_msg.tmo_info.signature, timeout_msg.id)
+
     def process_remote_timeout(
         self, timeout_message: TimeoutMessage, safety: Safety, block_tree: BlockTree
     ) -> None:
@@ -65,8 +68,12 @@ class Pacemaker:
             high_qc_rounds = map(
                 self.extract_high_qc, self.pending_timeouts[tmo_info.round]
             )
+            timeout_signatures = map(
+                self.extract_timeout_signatures,
+                self.pending_timeouts[tmo_info.round].values(),
+            )
             return TimeoutCertificate(
-                tmo_info.round, high_qc_rounds, None
+                tmo_info.round, high_qc_rounds, timeout_signatures
             )  # TODO add implementation here
 
     def advance_round_tc(self, tc: TimeoutCertificate) -> bool:
