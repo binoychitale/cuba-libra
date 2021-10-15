@@ -32,7 +32,7 @@ class Ledger:
         with open("ledger-pid-" + str(self.id), "a") as ledger_file:
             commands = []
             for txn in block_to_commit.payload:
-                commands.append(txn.command)
+                commands.append(txn.command + "\n")
             ledger_file.writelines(commands)
             ledger_file.flush()
 
