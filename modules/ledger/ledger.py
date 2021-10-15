@@ -5,10 +5,11 @@ from modules.objects import Block, CommittedBlock, Transaction
 
 
 class Ledger:
-    def __init__(self) -> None:
+    def __init__(self, id) -> None:
         self.ledger: List[CommittedBlock] = []
         # Map of state-id to Pending block
         self.speculate_states: Dict[str, str] = {}
+        self.id = id
 
     def speculate(self, block_id: str, txns: Any) -> int:
         # TODO change to legit transactions later
@@ -28,6 +29,12 @@ class Ledger:
         self.ledger.append(
             CommittedBlock(block_to_commit, self.get_pending_state(block_id))
         )
+        with open("ledger-pid-" + str(self.id), "a") as ledger_file:
+            commands = []
+            for txn in block_to_commit.payload:
+                commands.append(txn.command)
+            ledger_file.writelines(commands)
+            ledger_file.flush()
 
     def get_committed_block(self, block_id: str) -> CommittedBlock:
         for block in self.ledger:
