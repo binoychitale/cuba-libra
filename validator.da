@@ -34,7 +34,7 @@ class Validator(process):
         self.local_timeout_time = round(time.time() * 1000)
 
         self.safety = Safety(key_pair[0], key_pair[1], id)
-        ledger = Ledger()
+        ledger = Ledger(id)
         block_tree = BlockTree(ledger, f, id)
         leader_election = LeaderElection(len(public_key_map.keys()))
         pacemaker = Pacemaker(f, id)
