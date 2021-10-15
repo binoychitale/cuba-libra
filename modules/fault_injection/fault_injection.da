@@ -8,9 +8,7 @@ from modules.block_tree.block_tree import BlockTree
 from modules.leaderelection.leaderelection import LeaderElection
 from modules.ledger.ledger import Ledger
 from modules.main.main import Main
-from modules.objects import FailType, MsgType, ProposalMessage, Transaction
-from modules.pacemaker.pacemaker import Pacemaker
-from modules.safety.safety import Safety
+from modules.objects import FailType, MsgType
 from validator import Validator
 
 

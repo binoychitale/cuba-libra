@@ -300,6 +300,11 @@ class Hasher:
         return engine(msg, encoder=encoder)
 
 
+class Transaction:
+    def __init__(self, command: str):
+        self.command = command
+
+
 class EventType:
     LOCAL_TIMEOUT = "local_timeout"
     PROPOSAL_MESSAGE = "proposal_message"
@@ -388,3 +393,112 @@ Failure = namedtuple(
     "Failure",
     ["src", "dest", "msg_type", "round", "prob", "fail_type", "val", "attr"],
 )
+
+
+failure_cases = [
+    {
+        "msg": "Minority fail: Message Loss",
+        "rules": [
+            Failure(
+                src=0,
+                dest="_",
+                msg_type=MsgType.Wildcard,
+                round=1,
+                prob=1,
+                fail_type=FailType.MsgLoss,
+                val=None,
+                attr=None,
+            )
+        ],
+    },
+    {
+        "msg": "Majority fail: Message Loss",
+        "rules": [
+            Failure(
+                src=0,
+                dest="_",
+                msg_type=MsgType.Wildcard,
+                round=1,
+                prob=1,
+                fail_type=FailType.MsgLoss,
+                val=None,
+                attr=None,
+            ),
+            Failure(
+                src=1,
+                dest="_",
+                msg_type=MsgType.Wildcard,
+                round=1,
+                prob=1,
+                fail_type=FailType.MsgLoss,
+                val=None,
+                attr=None,
+            ),
+        ],
+    },
+    {
+        "msg": "Minority fail: Message Delay",
+        "rules": [
+            Failure(
+                src=0,
+                dest="_",
+                msg_type=MsgType.Wildcard,
+                round=1,
+                prob=1,
+                fail_type=FailType.Delay,
+                val=None,
+                attr=None,
+            )
+        ],
+    },
+    {
+        "msg": "Majority fail: Message Delay",
+        "rules": [
+            Failure(
+                src=0,
+                dest="_",
+                msg_type=MsgType.Wildcard,
+                round=1,
+                prob=1,
+                fail_type=FailType.Delay,
+                val=None,
+                attr=None,
+            ),
+            Failure(
+                src=1,
+                dest="_",
+                msg_type=MsgType.Wildcard,
+                round=1,
+                prob=1,
+                fail_type=FailType.Delay,
+                val=None,
+                attr=None,
+            ),
+        ],
+    },
+    {
+        "msg": "Majority fail: Validator vote delay",
+        "rules": [
+            Failure(
+                src="_",
+                dest="leader",
+                msg_type=MsgType.Vote,
+                round=1,
+                prob=1,
+                fail_type=FailType.Delay,
+                val=None,
+                attr=None,
+            )
+        ],
+    },
+    # Failure(
+    #     src="leader",
+    #     dest="_",
+    #     msg_type=MsgType.Vote,
+    #     round=3,
+    #     prob=0.5,
+    #     fail_type=FailType.SetAttr,
+    #     val=2,
+    #     attr="highest_vote_round",
+    # ),
+]

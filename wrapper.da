@@ -5,6 +5,7 @@ from modules.objects import (
     Failure,
     FailureConfig,
     MsgType,
+    failure_cases,
     generate_test_configs,
 )
 from validator import *
