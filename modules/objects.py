@@ -131,13 +131,21 @@ class TimeoutMessage:
         )
 
     def create_signed_payload(self, signing_key: SigningKey) -> Tuple:
-        return (self, self._sign_timeout_msg(signing_key))
+        signed_msg = self._sign_timeout_msg(signing_key)
+        self.tmo_info.signature = signed_msg
+        return (self, signed_msg)
 
     def verify_signed_payload(
         self, signed_payload: SignedMessage, verify_key: VerifyKey
     ) -> bool:
         return Signatures.verify_message(signed_payload, verify_key) == bytes(
             str(self.id), encoding="utf-8"
+        )
+
+    @staticmethod
+    def verify_sig_from_id(id, signature, verify_key):
+        return Signatures.verify_message(signature, verify_key) == bytes(
+            str(id), encoding="utf-8"
         )
 
 

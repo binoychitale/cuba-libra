@@ -50,6 +50,8 @@ class Main:
             self.process_certificate_qc(proposal.block.qc)
             self.process_certificate_qc(proposal.high_commit_qc)
         if proposal.last_round_tc:
+            if not self.safety.verify_tc(proposal.last_round_tc):
+                return None
             self.pacemaker.advance_round_tc(proposal.last_round_tc)
 
         current_round = self.pacemaker.current_round
