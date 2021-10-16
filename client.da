@@ -19,6 +19,7 @@ class Client(process):
     ):
         # do any additional setup here
         self.f = f
+        self.n = len(validator_map)
         self.client_id = id
         self.client_map = client_map
         self.validators = list(validator_map.values())
@@ -26,13 +27,13 @@ class Client(process):
 
     def run():
         uid = uuid.uuid4().hex
-        transaction = Transaction("hello", uid, self.client_id)
-        self.pending_requests[uid] = self.client_id
-        output(
+        transaction = Transaction("hello" + str(self.client_id), uid, self.client_id)
+        self.pending_requests[uid] = self.n
+        """output(
             "Sending Transaction with trx_id {} from client {}".format(
                 uid, self.client_id
             )
-        )
+        )"""
         send(("Client-Transaction", transaction), to=self.validators)
 
         while True:
@@ -40,11 +41,14 @@ class Client(process):
 
     def receive(msg=("Client-Reply", body), from_=source):
         output(
-            "Received Reply back for trx_id {} in client {}".format(
-                body, self.client_id
+            "Received Reply back for trx_id {} in client {} from validator {}".format(
+                body[0], self.client_id, body[1]
             )
         )
-        self.pending_requests.pop(body)
+        # TODO: Wait for 2f+1 replies
+        self.pending_requests[body[0]] = self.pending_requests.get(body[0]) - 1
+        if self.pending_requests.get(body[0]) == 0:
+            self.pending_requests.pop(body[0])
         output(
             "Number of pending requests in client {} = {}".format(
                 self.client_id, len(self.pending_requests)

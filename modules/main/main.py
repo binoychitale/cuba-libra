@@ -1,5 +1,5 @@
 import itertools
-from typing import Dict, Union
+from typing import Dict, List, Union
 
 from modules import mempool
 from modules.block_tree.block_tree import BlockTree
@@ -62,6 +62,7 @@ class Main:
             proposal.block.round != current_round
             or proposal.sender_id != leader
             or proposal.block.author != leader
+            or len(proposal.block.payload) == 0
         ):
             return None
 
@@ -141,13 +142,12 @@ class Main:
 
     def get_next_proposal(self, new_qc):
         trx_id_list, transactions = self.get_transactions()
-        if len(transactions) > 0:
-            new_block = self.block_tree.generate_block(
-                transactions, self.pacemaker.current_round
-            )
-            self.block_tree.execute_and_insert(new_block)
-            self.pacemaker.start_timer(self.pacemaker.current_round + 1)
-            return ProposalMessage(new_block, None, new_qc, None, self.id, trx_id_list)
+        new_block = self.block_tree.generate_block(
+            transactions, self.pacemaker.current_round
+        )
+        self.block_tree.execute_and_insert(new_block)
+        # self.pacemaker.start_timer(self.pacemaker.current_round + 1)
+        return ProposalMessage(new_block, None, new_qc, None, self.id, trx_id_list)
 
     def get_transactions(self):
         trx_id_list, transactions = [], []
@@ -158,12 +158,16 @@ class Main:
             trx_id_list.append(id)
             transactions.append(transaction)
 
+        print(
+            [trx.command for trx in transactions],
+            "round {} validator {}".format(self.pacemaker.current_round, self.id),
+        )
+
         return trx_id_list, transactions
 
-    def deque_trx(self, proposal: ProposalMessage) -> Dict[str, int]:
+    def deque_trx(self, trx_ids: List[str]) -> Dict[str, int]:
         trx_client_map = {}
-        proposal_request_ids = proposal.trx_ids
-        for req_id in proposal_request_ids:
+        for req_id in trx_ids:
             transaction = self.mempool.queue.get(req_id)
             if transaction:
                 self.mempool.queue.pop(req_id)

@@ -30,15 +30,17 @@ class Validator(process):
         self.local_timeout_time = round(time.time() * 1000)
 
         self.safety = Safety(key_pair[0], key_pair[1], id)
-        ledger = Ledger()
+        ledger = Ledger(id)
         block_tree = BlockTree(ledger, f, id)
         leader_election = LeaderElection(len(public_key_map.keys()))
         pacemaker = Pacemaker(f)
         self.mempool = MemPool()
         self.main = Main(block_tree, leader_election, pacemaker, safety, ledger, mempool, id)
+        
         self.validator_id = id
         self.round_done = False
         self.client_map = client_map
+        self.all_validators = ps | set([self])
 
     def run():
         while True:
@@ -47,24 +49,21 @@ class Validator(process):
             if (
                 self.main.check_if_current_leader()
                 and self.main.pacemaker.current_round == 0
-                and len(self.mempool.queue) == self.main.block_tree.block_size
+                and len(self.mempool.queue) > 0
             ):
-                output("Creating Initial Proposal")
                 # Send a proposal
                 proposal = self.main.get_next_proposal(None)
                 if proposal:
                     send(
                         ("Message-Proposal", proposal), to=self.ps
                     )
-            if await (self.main.round_done or len(self.mempool.queue) == self.main.block_tree.block_size):
+            if await (self.main.round_done or len(self.mempool.queue) > 0):
                 self.main.round_done = False
             elif timeout(5):
                 print(
                     "Local timeout at %s for round %s"
                     % (self.validator_id, self.main.pacemaker.current_round)
                 )
-                recv_set = ps
-                ps.add(self)
                 send(
                     (
                         "Message-Timeout",
@@ -72,7 +71,7 @@ class Validator(process):
                             self.main.safety, self.main.block_tree
                         ),
                     ),
-                    to=ps,
+                    to=self.all_validators,
                 )
 
     # Have a separate receive handler for each type of message
@@ -80,7 +79,7 @@ class Validator(process):
     def receive(msg=("Client-Transaction", body), from_=source):
         #output("Received {} at validator {}".format(body, self.validator_id))
         self.mempool.queue[body.id] = body
-        output("Mempool size {}", len(self.mempool.queue))
+        #output("Mempool size {}", len(self.mempool.queue))
 
     def receive(msg=("Message-Proposal", proposal), from_=source):
         # Handle message proposal
@@ -92,24 +91,46 @@ class Validator(process):
         next_leader = self.main.leader_election.get_leader(
             self.main.pacemaker.current_round
         )
-        print("VOTE", vote)
-        send(("Message-Vote", (vote, proposal)), to=validator_map[next_leader])
+        print("VOTE", vote, "Round", self.main.pacemaker.current_round, "Next Leader:", next_leader, "Validator:",self.validator_id)
+        if vote:
+            send(("Message-Vote", (vote, proposal.trx_ids)), to=validator_map[next_leader])
+        else:
+            output(
+                "Ledger: ",
+                list(([trx.command for trx in cb.block.payload] for cb in self.main.ledger.ledger)),
+                "Validator {}".format(self.validator_id),
+            )
+            output("Rounds: ", [cb.block.round for cb in self.main.ledger.ledger])
 
     def receive(msg=("Message-Vote", body), from_=source):
-        vote, proposal = body[0], body[1]
+        vote, trx_ids = body[0], body[1]
         # Handle vote message
         print(
             "Vote received at %s for round %s"
             % (self.validator_id, self.main.pacemaker.current_round)
         )
         new_qc = self.main.process_vote_msg(vote)
-        if new_qc:
-            trx_client_map = self.main.deque_trx(proposal)
+        if new_qc is not None:
+            trx_client_map = self.main.deque_trx(trx_ids)
             for trx_id, client_id in trx_client_map.items():
                 send(
-                    ("Client-Reply", trx_id),
+                    ("Client-Reply", (trx_id, self.validator_id)),
                     to=self.client_map[client_id],
                 )
+            
+            send(
+                    ("Deque-Transaction", trx_ids),
+                    to=self.ps,
+                )
+            """await(some(received(('Dequed', id)), has = (
+                id == self.main.leader_election.get_leader(self.main.pacemaker.current_round)
+            )))"""
+            """num_received = 0
+            while num_received != len(validator_map):
+                if await(some(received(('Dequed')))):
+                    num_received += 1
+                elif timeout(5):
+                    break"""
             
             next_proposal = self.main.get_next_proposal(new_qc)
             if next_proposal:
@@ -117,13 +138,25 @@ class Validator(process):
                     ("Message-Proposal", next_proposal),
                     to=self.ps,
                 )
+            else:
+                output("Ledger: ", [trx.command for trx in self.main.ledger.ledger[-1].block.payload], "Round {}, Validator {}".format(self.main.pacemaker.current_round, self.validator_id))
+    
+    def receive(msg=("Deque-Transaction", trx_ids), from_=source):
+        trx_client_map = self.main.deque_trx(trx_ids)
+        #send(('Dequed', self.validator_id), to=source)
+        #send(('Dequed'), to=source)
 
+        for trx_id, client_id in trx_client_map.items():
+            send(
+                ("Client-Reply", (trx_id, self.validator_id)),
+                to=self.client_map[client_id],
+            )
 
     def receive(msg=("Message-Timeout", body), from_=source):
         # Handle remote timeout message
         print(f"Timeout received at: {id}")
         new_proposal = self.main.process_timeout_msg(body)
-        if new_proposal is not None:
+        if new_proposal:
             print(
                 f"Timeout certificate at: {id} for round {new_proposal.last_round_tc.round}"
             )

@@ -26,6 +26,11 @@ class LedgerCommitInfo:
     def fields(self):
         return (self.commit_state_id, self.vote_info_hash)
 
+    def __repr__(self):
+        from pprint import pformat
+
+        return pformat(vars(self), indent=4, width=1)
+
 
 class VoteInfo:
     def __init__(
@@ -51,6 +56,11 @@ class VoteInfo:
             self.exec_state_id,
         )
 
+    def __repr__(self):
+        from pprint import pformat
+
+        return pformat(vars(self), indent=4, width=1)
+
 
 class QuorumCertificate:
     def __init__(
@@ -66,6 +76,11 @@ class QuorumCertificate:
         self.signatures = signatures
         self.author = author
         self.author_signature = author_signature
+
+    def __repr__(self):
+        from pprint import pformat
+
+        return pformat(vars(self), indent=4, width=1)
 
 
 class Transaction:
@@ -91,6 +106,11 @@ class Block:
         self.payload = payload
         self.qc = qc
         self.id = id
+
+    def __repr__(self):
+        from pprint import pformat
+
+        return pformat(vars(self), indent=4, width=1)
 
 
 class CommittedBlock:
@@ -164,6 +184,11 @@ class ProposalMessage:
         self.signature = signature  # TODO: signu(block.id);
         self.sender_id = sender_id
         self.trx_ids = trx_ids
+
+    def __repr__(self):
+        from pprint import pformat
+
+        return pformat(vars(self), indent=4, width=1)
 
 
 class Certificate:
@@ -259,8 +284,8 @@ class TestConfig:
 
 
 def generate_test_configs() -> List[TestConfig]:
-    n_validators = [4, 10]
-    n_clients = [5, 2]
+    n_validators = [5, 10]
+    n_clients = [10, 2]
     tests = []
 
     for i, n in enumerate(n_validators):

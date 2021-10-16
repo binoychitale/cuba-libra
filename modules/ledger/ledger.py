@@ -5,7 +5,8 @@ from modules.objects import Block, CommittedBlock, Transaction
 
 
 class Ledger:
-    def __init__(self) -> None:
+    def __init__(self, node_id) -> None:
+        self.node_id = node_id
         self.ledger: List[CommittedBlock] = []
         # Map of state-id to Pending block
         self.speculate_states: Dict[str, str] = {}
@@ -24,6 +25,12 @@ class Ledger:
 
     def commit(self, block_id: str, block_tree: BlockTree):
         block_to_commit = block_tree.pending_block_tree.find(block_id)
+        print(
+            "Ledger: ",
+            list(([trx.command for trx in cb.block.payload] for cb in self.ledger)),
+            "Validator {}".format(self.node_id),
+        )
+        print("Rounds: ", [cb.block.round for cb in self.ledger])
 
         self.ledger.append(
             CommittedBlock(block_to_commit, self.get_pending_state(block_id))

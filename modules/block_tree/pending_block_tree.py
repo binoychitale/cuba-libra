@@ -21,7 +21,7 @@ class PendingBlockTree:
     def add(self, block: Block):
         self.tree.append(block)
 
-    def find(self, block_id):
+    def find(self, block_id) -> Block:
         for block in self.tree:
             if block.id == block_id:
                 return block
