@@ -11,10 +11,8 @@ class Ledger:
         self.speculate_states: Dict[str, str] = {}
         self.id = id
 
-    def speculate(self, block_id: str, txns: Any) -> int:
-        # TODO change to legit transactions later
-        trans = Transaction("hello", "", 0)
-        txns = trans.command
+    def speculate(self, block_id: str, txns: List[Transaction]) -> int:
+        txns = ",".join([trx.command for trx in txns])
         commit_state_id = (
             self.ledger[-1].commit_state_id if len(self.ledger) > 0 else ""
         )

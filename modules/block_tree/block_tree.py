@@ -44,7 +44,7 @@ class BlockTree:
 
     def execute_and_insert(self, b: Block):
         # TODO get actual transactions and pass them into speculate
-        self.ledger.speculate(b.id, None)
+        self.ledger.speculate(b.id, b.payload)
         self.pending_block_tree.add(b)
 
     def process_vote(self, vote: VoteMsg):
