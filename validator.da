@@ -46,19 +46,19 @@ class Validator(process):
         while True:
             --receive
             # Check if 5 seconds have elapsed since timer was set
-            # if (
-            #     self.main.check_if_current_leader()
-            #     and self.main.pacemaker.current_round == 0
-            # ):
-            #     # Send a proposal
-            #     proposal: ProposalMessage = self.main.get_next_proposal(None)
-            #     send(
-            #         (
-            #             "Message-Proposal",
-            #             (proposal.create_signed_payload(key_pair[0])),
-            #         ),
-            #         to=self.ps,
-            #     )
+            if (
+                self.main.check_if_current_leader()
+                and self.main.pacemaker.current_round == 0
+            ):
+                # Send a proposal
+                proposal: ProposalMessage = self.main.get_next_proposal(None)
+                send(
+                    (
+                        "Message-Proposal",
+                        (proposal.create_signed_payload(key_pair[0])),
+                    ),
+                    to=self.ps,
+                )
 
             if await (self.main.round_done):
                 self.main.round_done = False
