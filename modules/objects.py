@@ -1,3 +1,4 @@
+import pickle
 from collections import namedtuple
 from enum import Enum
 from os import stat
@@ -155,22 +156,12 @@ class TimeoutMessage:
         self.high_commit_qc = high_commit_qc
         self.id = id
 
-    def _sign_timeout_msg(self, signing_key: SigningKey) -> bytes:
-        return Signatures.sign_message(
+    def create_signed_payload(self, signing_key: SigningKey) -> Tuple:
+        self.tmo_info.signature = Signatures.sign_message(
             bytes(str(self.id), encoding="utf-8"), signing_key
         )
-
-    def create_signed_payload(self, signing_key: SigningKey) -> Tuple:
-        signed_msg = self._sign_timeout_msg(signing_key)
-        self.tmo_info.signature = signed_msg
-        return (self, signed_msg)
-
-    def verify_signed_payload(
-        self, signed_payload: SignedMessage, verify_key: VerifyKey
-    ) -> bool:
-        return Signatures.verify_message(signed_payload, verify_key) == bytes(
-            str(self.id), encoding="utf-8"
-        )
+        signed_payload = Signatures.pickle_and_sign_payload(self, signing_key)
+        return (self, signed_payload)
 
     @staticmethod
     def verify_sig_from_id(id, signature, verify_key):
@@ -194,20 +185,9 @@ class VoteMsg:
         self.sender = sender
         self.signature = signature
 
-    def _sign_vote(self, signing_key: SigningKey) -> bytes:
-        return Signatures.sign_message(
-            bytes(str(self.sender), encoding="utf-8"), signing_key
-        )
-
     def create_signed_payload(self, signing_key: SigningKey) -> Tuple:
-        return (self, self._sign_vote(signing_key))
-
-    def verify_signed_payload(
-        self, signed_payload: SignedMessage, verify_key: VerifyKey
-    ) -> bool:
-        return Signatures.verify_message(signed_payload, verify_key) == bytes(
-            str(self.sender), encoding="utf-8"
-        )
+        signed_payload = Signatures.pickle_and_sign_payload(self, signing_key)
+        return self, signed_payload
 
 
 class ProposalMessage:
@@ -233,20 +213,9 @@ class ProposalMessage:
 
         return pformat(vars(self), indent=4, width=1)
 
-    def _sign_proposal(self, signing_key: SigningKey) -> bytes:
-        return Signatures.sign_message(
-            bytes(str(self.sender_id), encoding="utf-8"), signing_key
-        )
-
     def create_signed_payload(self, signing_key: SigningKey) -> Tuple:
-        return (self, self._sign_proposal(signing_key))
-
-    def verify_signed_payload(
-        self, signed_payload: SignedMessage, verify_key: VerifyKey
-    ) -> bool:
-        return Signatures.verify_message(signed_payload, verify_key) == bytes(
-            str(self.sender_id), encoding="utf-8"
-        )
+        signed_payload = Signatures.pickle_and_sign_payload(self, signing_key)
+        return self, signed_payload
 
 
 class Certificate:
@@ -286,6 +255,20 @@ class Signatures:
             return public_key.verify(signed_msg, encoder=encoder)
         except (CryptoError, BadSignatureError):
             return False
+
+    @staticmethod
+    def pickle_and_sign_payload(obj: Any, signing_key: SigningKey) -> bytes:
+        pickled_obj = pickle.dumps(obj)
+        return Signatures.sign_message(pickled_obj, signing_key)
+
+    @staticmethod
+    def verify_signed_payload(
+        signed_payload: SignedMessage, verify_key: VerifyKey
+    ) -> Any:
+        verified_obj = Signatures.verify_message(signed_payload, verify_key)
+        if verified_obj:
+            return pickle.loads(verified_obj)
+        return False
 
 
 class Hasher:
@@ -505,3 +488,5 @@ failure_cases = [
     #     attr="highest_vote_round",
     # ),
 ]
+
+# failure_cases = []
