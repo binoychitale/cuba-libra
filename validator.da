@@ -55,17 +55,20 @@ class Validator(process):
         self.terminate_count = 0
 
     def run():
+        init_state = True
         while True:
             --receive
             # Check if 5 seconds have elapsed since timer was set
             if (
-                self.main.check_if_current_leader()
+                init_state
+                and self.main.check_if_current_leader()
                 and self.main.pacemaker.current_round == 0
                 and len(self.mempool.queue) > 0
             ):
                 # Send a proposal
                 proposal = self.main.get_next_proposal(None)
                 if proposal:
+                    init_state = False
                     send(
                         (
                             "Message-Proposal",

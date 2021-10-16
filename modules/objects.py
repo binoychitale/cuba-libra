@@ -300,14 +300,6 @@ class Hasher:
         return engine(msg, encoder=encoder)
 
 
-class Transaction:
-    def __init__(self, command: str, id: str, client_id: int):
-        self.command = command
-        self.id = id
-        self.retry_count = 0
-        self.client_id = client_id
-
-
 class EventType:
     LOCAL_TIMEOUT = "local_timeout"
     PROPOSAL_MESSAGE = "proposal_message"
