@@ -35,7 +35,13 @@ class Client(process):
                 uid, self.client_id
             )
         )"""
-        send(("Client-Transaction", transaction), to=self.validators)
+        send(
+            (
+                "Client-Transaction",
+                transaction.create_signed_payload(client_key_pair[0]),
+            ),
+            to=self.validators,
+        )
 
         while True:
             --receive

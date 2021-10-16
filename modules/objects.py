@@ -94,6 +94,10 @@ class Transaction:
         self.retry_count = 0
         self.client_id = client_id
 
+    def create_signed_payload(self, signing_key: SigningKey) -> Tuple:
+        signed_payload = Signatures.pickle_and_sign_payload(self, signing_key)
+        return (self, signed_payload)
+
 
 class Block:
     def __init__(
