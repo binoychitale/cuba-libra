@@ -27,6 +27,11 @@ class LedgerCommitInfo:
     def fields(self):
         return (self.commit_state_id, self.vote_info_hash)
 
+    def __repr__(self):
+        from pprint import pformat
+
+        return pformat(vars(self), indent=4, width=1)
+
 
 class VoteInfo:
     def __init__(
@@ -52,6 +57,11 @@ class VoteInfo:
             self.exec_state_id,
         )
 
+    def __repr__(self):
+        from pprint import pformat
+
+        return pformat(vars(self), indent=4, width=1)
+
 
 class QuorumCertificate:
     def __init__(
@@ -68,13 +78,26 @@ class QuorumCertificate:
         self.author = author
         self.author_signature = author_signature
 
+    def __repr__(self):
+        from pprint import pformat
+
+        return pformat(vars(self), indent=4, width=1)
+
+
+class Transaction:
+    def __init__(self, command: str, id: str, client_id: int):
+        self.command = command
+        self.id = id
+        self.retry_count = 0
+        self.client_id = client_id
+
 
 class Block:
     def __init__(
         self,
         author: Any,  # The author of the block, may not be the same as qc.author after view-change
         round: int,  # The round that generated this proposal
-        payload: Any,  # Proposed transaction(s)
+        payload: List[Transaction],  # Proposed transaction(s)
         qc: QuorumCertificate,  # QC for parent block
         id: str,  # A unique digest of author, round, payload, qc.vote info.id and qc.signatures
     ) -> None:
@@ -84,6 +107,11 @@ class Block:
         self.payload = payload
         self.qc = qc
         self.id = id
+
+    def __repr__(self):
+        from pprint import pformat
+
+        return pformat(vars(self), indent=4, width=1)
 
 
 class CommittedBlock:
@@ -188,6 +216,7 @@ class ProposalMessage:
         high_commit_qc: QuorumCertificate,
         signature: Any,
         sender_id: int,
+        trx_ids: List[str],
     ) -> None:
 
         self.block = block
@@ -195,6 +224,12 @@ class ProposalMessage:
         self.high_commit_qc = high_commit_qc
         self.signature = signature  # TODO: signu(block.id);
         self.sender_id = sender_id
+        self.trx_ids = trx_ids
+
+    def __repr__(self):
+        from pprint import pformat
+
+        return pformat(vars(self), indent=4, width=1)
 
     def _sign_proposal(self, signing_key: SigningKey) -> bytes:
         return Signatures.sign_message(
@@ -263,11 +298,6 @@ class Hasher:
         return engine(msg, encoder=encoder)
 
 
-class Transaction:
-    def __init__(self, command: str):
-        self.command = command
-
-
 class EventType:
     LOCAL_TIMEOUT = "local_timeout"
     PROPOSAL_MESSAGE = "proposal_message"
@@ -293,26 +323,44 @@ class TestConfig:
     def __init__(
         self,
         nvalidators: int,
-        key_pairs: Tuple[SigningKey, VerifyKey],
-        public_key_map: Dict[int, VerifyKey],
+        validator_key_pairs: Tuple[SigningKey, VerifyKey],
+        validator_pubkey_map: Dict[int, VerifyKey],
+        client_key_pairs: Tuple[SigningKey, VerifyKey],
+        client_pubkey_map: Dict[int, VerifyKey],
+        num_clients: int,
     ) -> None:
         self.nvalidators = nvalidators
-        self.key_pairs = key_pairs
-        self.public_key_map = public_key_map
+        self.validator_key_pairs = validator_key_pairs
+        self.validator_pubkey_map = validator_pubkey_map
+        self.client_key_pairs = client_key_pairs
+        self.client_pubkey_map = client_pubkey_map
+        self.num_clients = num_clients
 
 
 def generate_test_configs() -> List[TestConfig]:
-    n_validators = [4, 10]
+    n_validators = [5, 10]
+    n_clients = [10, 2]
     tests = []
 
-    for n in n_validators:
-        key_pairs = {idx: Signatures.init_signatures() for idx in range(n)}
-        public_key_map = {idx: pub_key for idx, (_, pub_key) in key_pairs.items()}
+    for i, n in enumerate(n_validators):
+        validator_key_pairs = {idx: Signatures.init_signatures() for idx in range(n)}
+        validator_pubkey_map = {
+            idx: pub_key for idx, (_, pub_key) in validator_key_pairs.items()
+        }
+        client_key_pairs = {
+            idx: Signatures.init_signatures() for idx in range(n_clients[i])
+        }
+        client_pubkey_map = {
+            idx: pub_key for idx, (_, pub_key) in client_key_pairs.items()
+        }
         tests.append(
             {
                 "nvalidators": n,
-                "key_pairs": key_pairs,
-                "public_key_map": public_key_map,
+                "validator_key_pairs": validator_key_pairs,
+                "validator_pubkey_map": validator_pubkey_map,
+                "client_key_pairs": client_key_pairs,
+                "client_pubkey_map": client_pubkey_map,
+                "num_clients": n_clients[i],
             }
         )
 

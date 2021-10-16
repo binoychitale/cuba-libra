@@ -13,7 +13,7 @@ class Ledger:
 
     def speculate(self, block_id: str, txns: Any) -> int:
         # TODO change to legit transactions later
-        trans = Transaction("hello")
+        trans = Transaction("hello", "", 0)
         txns = trans.command
         commit_state_id = (
             self.ledger[-1].commit_state_id if len(self.ledger) > 0 else ""
@@ -25,6 +25,12 @@ class Ledger:
 
     def commit(self, block_id: str, block_tree: BlockTree):
         block_to_commit = block_tree.pending_block_tree.find(block_id)
+        print(
+            "Ledger: ",
+            list(([trx.command for trx in cb.block.payload] for cb in self.ledger)),
+            "Validator {}".format(self.id),
+        )
+        print("Rounds: ", [cb.block.round for cb in self.ledger])
 
         self.ledger.append(
             CommittedBlock(block_to_commit, self.get_pending_state(block_id))

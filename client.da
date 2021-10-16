@@ -1,0 +1,56 @@
+import uuid
+from typing import Dict, Tuple
+
+from nacl.signing import SigningKey, VerifyKey
+
+from modules.objects import Transaction
+
+validator = import_da("validator")
+
+
+class Client(process):
+    def setup(
+        id: int,
+        f: int,
+        client_key_pair: Tuple[SigningKey, VerifyKey],
+        client_pubkey_map: Dict[int, VerifyKey],
+        validator_map: Dict[int, validator.Validator],
+        client_map: Dict[int, Client],
+    ):
+        # do any additional setup here
+        self.f = f
+        self.n = len(validator_map)
+        self.client_id = id
+        self.client_map = client_map
+        self.validators = list(validator_map.values())
+        self.pending_requests = {}
+
+    def run():
+        uid = uuid.uuid4().hex
+        transaction = Transaction("hello" + str(self.client_id), uid, self.client_id)
+        self.pending_requests[uid] = self.n
+        """output(
+            "Sending Transaction with trx_id {} from client {}".format(
+                uid, self.client_id
+            )
+        )"""
+        send(("Client-Transaction", transaction), to=self.validators)
+
+        while True:
+            --receive
+
+    def receive(msg=("Client-Reply", body), from_=source):
+        output(
+            "Received Reply back for trx_id {} in client {} from validator {}".format(
+                body[0], self.client_id, body[1]
+            )
+        )
+        # TODO: Wait for 2f+1 replies
+        self.pending_requests[body[0]] = self.pending_requests.get(body[0]) - 1
+        if self.pending_requests.get(body[0]) == 0:
+            self.pending_requests.pop(body[0])
+        output(
+            "Number of pending requests in client {} = {}".format(
+                self.client_id, len(self.pending_requests)
+            )
+        )
