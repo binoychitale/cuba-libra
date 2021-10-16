@@ -109,9 +109,7 @@ class Validator(process):
     # Have a separate receive handler for each type of message
 
     def receive(msg=("Client-Transaction", body), from_=source):
-        # output("Received {} at validator {}".format(body, self.validator_id))
         self.mempool.queue[body.id] = body
-        # output("Mempool size {}", len(self.mempool.queue))
 
     def receive(msg=("Message-Proposal", body), from_=source):
         # Handle message proposal
@@ -122,21 +120,24 @@ class Validator(process):
 
         proposal: ProposalMessage = body[0]
         signed_proposal: SignedMessage = body[1]
-        if not proposal.verify_signed_payload(
+        verified_proposal: ProposalMessage = Signatures.verify_signed_payload(
             signed_proposal, validator_keypair_map[proposal.sender_id][1]
-        ):
+        )
+        if not verified_proposal:
             raise Exception("There is an imposter among us !!")
 
-        vote: VoteMsg = self.main.process_proposal_msg(proposal)
+        vote: VoteMsg = self.main.process_proposal_msg(verified_proposal)
         next_leader = self.main.leader_election.get_leader(
             self.main.pacemaker.current_round
         )
-        # print("VOTE", vote, "Round", self.main.pacemaker.current_round, "Next Leader:", next_leader, "Validator:",self.validator_id)
         if vote:
             send(
                 (
                     "Message-Vote",
-                    (vote.create_signed_payload(key_pair[0]), proposal.trx_ids),
+                    (
+                        vote.create_signed_payload(key_pair[0]),
+                        verified_proposal.trx_ids,
+                    ),
                 ),
                 to=validator_map[next_leader],
             )
@@ -157,18 +158,19 @@ class Validator(process):
         # Handle vote message
         vote: VoteMsg = body[0][0]
         signed_vote: SignedMessage = body[0][1]
+        verified_vote: VoteMsg = Signatures.verify_signed_payload(
+            signed_vote, validator_keypair_map[vote.sender][1]
+        )
         trx_ids: List[str] = body[1]
         print(
             "Vote received at %s for round %s from %s"
             % (self.validator_id, self.main.pacemaker.current_round, vote.sender)
         )
 
-        if not vote.verify_signed_payload(
-            signed_vote, validator_keypair_map[vote.sender][1]
-        ):
+        if not verified_vote:
             raise Exception("There is an imposter among us !!")
 
-        new_qc = self.main.process_vote_msg(vote)
+        new_qc = self.main.process_vote_msg(verified_vote)
         if new_qc:
             trx_client_map = self.main.deque_trx(trx_ids)
             for trx_id, client_id in trx_client_map.items():
@@ -226,13 +228,14 @@ class Validator(process):
 
         timeout_msg: TimeoutMessage = body[0]
         signed_timeout: SignedMessage = body[1]
-
-        if not timeout_msg.verify_signed_payload(
+        verified_timeout_msg: TimeoutMessage = Signatures.verify_signed_payload(
             signed_timeout, validator_keypair_map[timeout_msg.id][1]
-        ):
+        )
+
+        if not verified_timeout_msg:
             raise Exception("There is an imposter among us !!")
 
-        new_proposal = self.main.process_timeout_msg(timeout_msg)
+        new_proposal = self.main.process_timeout_msg(verified_timeout_msg)
         if new_proposal:
             print(
                 f"Timeout certificate at: {id} for round {new_proposal.last_round_tc.round}"
