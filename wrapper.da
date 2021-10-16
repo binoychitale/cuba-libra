@@ -12,7 +12,11 @@ class RunDiemBFT(process):
         validators = new(Validator, num=test_config.nvalidators)
         clients = new(Client, num=test_config.num_clients)
         validator_map = {idx: validator for idx, validator in enumerate(validators)}
+        validator_keypair_map = {
+            idx: test_config.validator_key_pairs[idx] for idx, _ in enumerate(validators)
+        }
         client_map = {idx: client for idx, client in enumerate(clients)}
+        
         for idx, validator in enumerate(validators):
             setup(
                 {
@@ -25,7 +29,8 @@ class RunDiemBFT(process):
                     test_config.validator_key_pairs[idx],
                     test_config.validator_pubkey_map,
                     validator_map,
-                    client_map
+                    validator_keypair_map,
+                    client_map,
                 ),
             )
         for idx, client in enumerate(clients):

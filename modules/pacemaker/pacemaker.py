@@ -12,7 +12,7 @@ from modules.utils import helpers as date_utils
 
 
 class Pacemaker:
-    def __init__(self, f: int) -> None:
+    def __init__(self, f: int, id: int) -> None:
         self.current_round: int = 0
         self.last_round_tc: TimeoutCertificate = None
         self.pending_timeouts: Dict[
@@ -21,6 +21,7 @@ class Pacemaker:
         self.timer_start: int = date_utils.getTimeMillis()
         self.f: int = f
         self.round_done = False
+        self.id = id
 
     def start_timer(self, new_round: int) -> None:
         self.timer_start = date_utils.getTimeMillis()
@@ -36,10 +37,15 @@ class Pacemaker:
         )
 
         # TODO: Broadcast
-        return TimeoutMessage(timeout_info, self.last_round_tc, block_tree.high_qc)
+        return TimeoutMessage(
+            timeout_info, self.last_round_tc, block_tree.high_qc, self.id
+        )
 
     def extract_high_qc(self, timeout_msg):
         return timeout_msg.high_qc
+
+    def extract_timeout_signatures(self, timeout_msg):
+        return (timeout_msg.tmo_info.signature, timeout_msg.id)
 
     def process_remote_timeout(
         self, timeout_message: TimeoutMessage, safety: Safety, block_tree: BlockTree
@@ -62,8 +68,12 @@ class Pacemaker:
             high_qc_rounds = map(
                 self.extract_high_qc, self.pending_timeouts[tmo_info.round]
             )
+            timeout_signatures = map(
+                self.extract_timeout_signatures,
+                self.pending_timeouts[tmo_info.round].values(),
+            )
             return TimeoutCertificate(
-                tmo_info.round, high_qc_rounds, None
+                tmo_info.round, high_qc_rounds, timeout_signatures
             )  # TODO add implementation here
 
     def advance_round_tc(self, tc: TimeoutCertificate) -> bool:

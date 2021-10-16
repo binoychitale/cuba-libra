@@ -1,6 +1,7 @@
 from os import stat
 from typing import Any, Dict, List, Optional, Tuple
 
+from nacl import encoding
 from nacl.encoding import HexEncoder
 from nacl.exceptions import BadSignatureError, CryptoError
 from nacl.hash import sha256
@@ -68,8 +69,8 @@ class QuorumCertificate:
         vote_info: VoteInfo,
         ledger_commit_info: LedgerCommitInfo,
         signatures: List[Any],  # TODO: A quorum of signature,
-        author: Any,  # u - The validator that produced the q,
-        author_signature,  # ← signu(signatures),
+        author: int,  # u - The validator that produced the q,
+        author_signature: Any,  # ← signu(signatures),
     ) -> None:
         self.vote_info = vote_info
         self.ledger_commit_info = ledger_commit_info
@@ -145,10 +146,35 @@ class TimeoutMessage:
         tmo_info: TimeoutInfo,
         last_round_tc: TimeoutCertificate,
         high_commit_qc: QuorumCertificate,
+        id: int,
     ) -> None:
         self.tmo_info = tmo_info
         self.last_round_tc = last_round_tc
         self.high_commit_qc = high_commit_qc
+        self.id = id
+
+    def _sign_timeout_msg(self, signing_key: SigningKey) -> bytes:
+        return Signatures.sign_message(
+            bytes(str(self.id), encoding="utf-8"), signing_key
+        )
+
+    def create_signed_payload(self, signing_key: SigningKey) -> Tuple:
+        signed_msg = self._sign_timeout_msg(signing_key)
+        self.tmo_info.signature = signed_msg
+        return (self, signed_msg)
+
+    def verify_signed_payload(
+        self, signed_payload: SignedMessage, verify_key: VerifyKey
+    ) -> bool:
+        return Signatures.verify_message(signed_payload, verify_key) == bytes(
+            str(self.id), encoding="utf-8"
+        )
+
+    @staticmethod
+    def verify_sig_from_id(id, signature, verify_key):
+        return Signatures.verify_message(signature, verify_key) == bytes(
+            str(id), encoding="utf-8"
+        )
 
 
 class VoteMsg:
@@ -165,6 +191,21 @@ class VoteMsg:
         self.high_commit_qc = high_commit_qc
         self.sender = sender
         self.signature = signature
+
+    def _sign_vote(self, signing_key: SigningKey) -> bytes:
+        return Signatures.sign_message(
+            bytes(str(self.sender), encoding="utf-8"), signing_key
+        )
+
+    def create_signed_payload(self, signing_key: SigningKey) -> Tuple:
+        return (self, self._sign_vote(signing_key))
+
+    def verify_signed_payload(
+        self, signed_payload: SignedMessage, verify_key: VerifyKey
+    ) -> bool:
+        return Signatures.verify_message(signed_payload, verify_key) == bytes(
+            str(self.sender), encoding="utf-8"
+        )
 
 
 class ProposalMessage:
@@ -189,6 +230,21 @@ class ProposalMessage:
         from pprint import pformat
 
         return pformat(vars(self), indent=4, width=1)
+
+    def _sign_proposal(self, signing_key: SigningKey) -> bytes:
+        return Signatures.sign_message(
+            bytes(str(self.sender_id), encoding="utf-8"), signing_key
+        )
+
+    def create_signed_payload(self, signing_key: SigningKey) -> Tuple:
+        return (self, self._sign_proposal(signing_key))
+
+    def verify_signed_payload(
+        self, signed_payload: SignedMessage, verify_key: VerifyKey
+    ) -> bool:
+        return Signatures.verify_message(signed_payload, verify_key) == bytes(
+            str(self.sender_id), encoding="utf-8"
+        )
 
 
 class Certificate:
@@ -223,13 +279,11 @@ class Signatures:
         signed_msg: SignedMessage,
         public_key: VerifyKey,
         encoder: Optional[Any] = encoder,
-    ) -> bool:
+    ) -> bytes:
         try:
-            public_key.verify(signed_msg, encoder=encoder)
+            return public_key.verify(signed_msg, encoder=encoder)
         except (CryptoError, BadSignatureError):
             return False
-
-        return True
 
 
 class Hasher:
