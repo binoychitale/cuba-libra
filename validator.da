@@ -34,6 +34,7 @@ class Validator(process):
         validator_map: Dict[int, Validator],
         validator_keypair_map: Dict[int, Tuple[SigningKey, VerifyKey]],
         client_map: Dict[int, client.Client],
+        client_keypair_map: Dict[int, Tuple[SigningKey, VerifyKey]],
     ):
         # do any additional setup here
         self.local_timeout_time = round(time.time() * 1000)
@@ -53,6 +54,7 @@ class Validator(process):
         self.client_map = client_map
         self.all_validators = ps | set([self])
         self.terminate_count = 0
+        self.client_keypair_map = client_keypair_map
 
     def run():
         init_state = True
@@ -109,7 +111,15 @@ class Validator(process):
     # Have a separate receive handler for each type of message
 
     def receive(msg=("Client-Transaction", body), from_=source):
-        self.mempool.queue[body.id] = body
+        transaction = body[0]
+        signed_transaction = body[1]
+        verified_transaction: Transaction = Signatures.verify_signed_payload(
+            signed_transaction, client_keypair_map[transaction.client_id][1]
+        )
+        if not verified_transaction:
+            raise Exception("There is an imposter among us !!")
+
+        self.mempool.queue[transaction.id] = verified_transaction
 
     def receive(msg=("Message-Proposal", body), from_=source):
         # Handle message proposal
