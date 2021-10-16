@@ -20,11 +20,21 @@ class ValidatorFI(process, Validator):
         key_pair: Tuple[SigningKey, VerifyKey],
         public_key_map: Dict[int, VerifyKey],
         validator_map: Dict[int, Validator],
-        kv_pairs_map: Dict[int, Tuple[SigningKey, VerifyKey]],
+        validator_keypair_map: Dict[int, Tuple[SigningKey, VerifyKey]],
+        client_map: Dict[int, client.Client],
         failure_config: NamedTuple,
     ):
         self.failure_config = failure_config
-        super().setup(ps, id, f, key_pair, public_key_map, validator_map, kv_pairs_map)
+        super().setup(
+            ps,
+            id,
+            f,
+            key_pair,
+            public_key_map,
+            validator_map,
+            validator_keypair_map,
+            client_map,
+        )
         # do any additional setup here
 
     def send(m, to):

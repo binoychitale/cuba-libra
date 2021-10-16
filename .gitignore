@@ -134,3 +134,4 @@ client.py
 ledger-pid-*
 validator.py
 wrapper.py
+modules/fault_injection/*.py
