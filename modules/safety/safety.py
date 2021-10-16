@@ -1,4 +1,6 @@
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
+
+from nacl.signing import SignedMessage, SigningKey, VerifyKey
 
 from modules.block_tree.block_tree import BlockTree
 from modules.ledger.ledger import Ledger
@@ -9,6 +11,7 @@ from modules.objects import (
     QuorumCertificate,
     TimeoutCertificate,
     TimeoutInfo,
+    TimeoutMessage,
     VoteInfo,
     VoteMsg,
 )
@@ -18,7 +21,7 @@ class Safety:
     def __init__(
         self,
         private_key: Certificate,
-        public_keys: List[Certificate],
+        public_keys: Dict[int, Tuple[SigningKey, VerifyKey]],
         id,
         highest_vote_round: Optional[int] = -1,
         highest_qc_round: Optional[int] = -1,
@@ -116,7 +119,7 @@ class Safety:
             vote_info,
             ledger_commit_info,
             block_tree.high_commit_qc,
-            sender=None,
+            sender=self.id,
             signature=None,
         )
 
@@ -130,12 +133,16 @@ class Safety:
             Certificate.is_valid_signatures(high_qc, last_tc)
             and self._is_safe_to_timeout(round, qc_round, last_tc)
         ):
-            print(
-                Certificate.is_valid_signatures(high_qc, last_tc),
-                self._is_safe_to_timeout(round, qc_round, last_tc),
-            )
             return None
 
         self._increase_highest_vote_round(round)
         # TODO: Construct timeout info properly
         return TimeoutInfo(round, high_qc, sender=self.id, signature=None)
+
+    def verify_tc(self, timeout_cert: TimeoutCertificate):
+        for (signature, id) in timeout_cert.tmo_signatures:
+            if not TimeoutMessage.verify_sig_from_id(
+                id, signature, self.public_keys[id][1]
+            ):
+                return False
+        return True

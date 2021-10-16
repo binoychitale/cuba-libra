@@ -53,6 +53,8 @@ class Main:
             self.process_certificate_qc(proposal.block.qc)
             self.process_certificate_qc(proposal.high_commit_qc)
         if proposal.last_round_tc:
+            if not self.safety.verify_tc(proposal.last_round_tc):
+                return None
             self.pacemaker.advance_round_tc(proposal.last_round_tc)
 
         current_round = self.pacemaker.current_round
@@ -82,7 +84,7 @@ class Main:
         self.pacemaker.start_timer(self.pacemaker.current_round + 1)
         return vote_msg
 
-    def process_new_round_event(self, last_tc: TimeoutCertificate) -> None:
+    def process_new_round_event(self, last_tc: TimeoutCertificate) -> ProposalMessage:
         # TODO: Identify and use U
         if self.id == self.leader_election.get_leader(self.pacemaker.current_round):
             trx_id_list, transactions = self.get_transactions()
@@ -100,7 +102,7 @@ class Main:
                 trx_ids=trx_id_list,
             )
 
-    def process_timeout_msg(self, timeout_message: TimeoutMessage) -> None:
+    def process_timeout_msg(self, timeout_message: TimeoutMessage) -> ProposalMessage:
         self.process_certificate_qc(timeout_message.tmo_info.high_qc)
         self.process_certificate_qc(timeout_message.high_commit_qc)
         self.pacemaker.advance_round_tc(timeout_message.last_round_tc)
