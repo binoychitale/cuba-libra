@@ -11,7 +11,7 @@ class BlockTree:
         self.high_qc: QuorumCertificate = None
         self.high_commit_qc: QuorumCertificate = None
         self.ledger = ledger
-        self.block_size = 2
+        self.block_size = 4
         self.f = f
         self.id = id
 
