@@ -1,3 +1,5 @@
+from collections import namedtuple
+from enum import Enum
 from os import stat
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -298,6 +300,14 @@ class Hasher:
         return engine(msg, encoder=encoder)
 
 
+class Transaction:
+    def __init__(self, command: str, id: str, client_id: int):
+        self.command = command
+        self.id = id
+        self.retry_count = 0
+        self.client_id = client_id
+
+
 class EventType:
     LOCAL_TIMEOUT = "local_timeout"
     PROPOSAL_MESSAGE = "proposal_message"
@@ -365,3 +375,133 @@ def generate_test_configs() -> List[TestConfig]:
         )
 
     return [TestConfig(**config) for config in tests]
+
+
+class MsgType(Enum):
+    Proposal = 1
+    QC = 2
+    TimeOut = 3
+    Vote = 4
+    Wildcard = 5  # matches all message types
+
+
+class FailType(Enum):
+    MsgLoss = 1
+    Delay = 2
+    SetAttr = 3
+
+
+FailureConfig = namedtuple("FailureConfig", ["failures", "seed"])
+Failure = namedtuple(
+    "Failure",
+    ["src", "dest", "msg_type", "round", "prob", "fail_type", "val", "attr"],
+)
+
+
+failure_cases = [
+    {
+        "msg": "Minority fail: Message Loss",
+        "rules": [
+            Failure(
+                src=0,
+                dest="_",
+                msg_type=MsgType.Wildcard,
+                round=1,
+                prob=1,
+                fail_type=FailType.MsgLoss,
+                val=None,
+                attr=None,
+            )
+        ],
+    },
+    {
+        "msg": "Majority fail: Message Loss",
+        "rules": [
+            Failure(
+                src=0,
+                dest="_",
+                msg_type=MsgType.Wildcard,
+                round=1,
+                prob=1,
+                fail_type=FailType.MsgLoss,
+                val=None,
+                attr=None,
+            ),
+            Failure(
+                src=1,
+                dest="_",
+                msg_type=MsgType.Wildcard,
+                round=1,
+                prob=1,
+                fail_type=FailType.MsgLoss,
+                val=None,
+                attr=None,
+            ),
+        ],
+    },
+    {
+        "msg": "Minority fail: Message Delay",
+        "rules": [
+            Failure(
+                src=0,
+                dest="_",
+                msg_type=MsgType.Wildcard,
+                round=1,
+                prob=1,
+                fail_type=FailType.Delay,
+                val=None,
+                attr=None,
+            )
+        ],
+    },
+    {
+        "msg": "Majority fail: Message Delay",
+        "rules": [
+            Failure(
+                src=0,
+                dest="_",
+                msg_type=MsgType.Wildcard,
+                round=1,
+                prob=1,
+                fail_type=FailType.Delay,
+                val=None,
+                attr=None,
+            ),
+            Failure(
+                src=1,
+                dest="_",
+                msg_type=MsgType.Wildcard,
+                round=1,
+                prob=1,
+                fail_type=FailType.Delay,
+                val=None,
+                attr=None,
+            ),
+        ],
+    },
+    {
+        "msg": "Majority fail: Validator vote delay",
+        "rules": [
+            Failure(
+                src="_",
+                dest="leader",
+                msg_type=MsgType.Vote,
+                round=1,
+                prob=1,
+                fail_type=FailType.Delay,
+                val=None,
+                attr=None,
+            )
+        ],
+    },
+    # Failure(
+    #     src="leader",
+    #     dest="_",
+    #     msg_type=MsgType.Vote,
+    #     round=3,
+    #     prob=0.5,
+    #     fail_type=FailType.SetAttr,
+    #     val=2,
+    #     attr="highest_vote_round",
+    # ),
+]

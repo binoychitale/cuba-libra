@@ -46,3 +46,10 @@ class Ledger:
         for block in self.ledger:
             if block.block.id == block_id:
                 return block
+
+    def display(self):
+        ledger_disp = []
+        for block in self.ledger:
+            for txn in block.block.payload:
+                ledger_disp.append(txn.command)
+        return ledger_disp

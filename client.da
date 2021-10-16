@@ -24,6 +24,7 @@ class Client(process):
         self.client_map = client_map
         self.validators = list(validator_map.values())
         self.pending_requests = {}
+        self.terminate = False
 
     def run():
         uid = uuid.uuid4().hex
@@ -38,6 +39,14 @@ class Client(process):
 
         while True:
             --receive
+            if await (self.terminate == True):
+                output("Client {} terminating".format(self.client_id))
+                send(("Client-Exit"), to=self.validators)
+                break
+            elif timeout(10):
+                output("Client {} timed out. Exiting".format(self.client_id))
+                send(("Client-Exit"), to=self.validators)
+                break
 
     def receive(msg=("Client-Reply", body), from_=source):
         output(
@@ -54,3 +63,5 @@ class Client(process):
                 self.client_id, len(self.pending_requests)
             )
         )
+        if len(self.pending_requests) == 0:
+            self.terminate = True
