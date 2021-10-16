@@ -52,6 +52,7 @@ class Validator(process):
         self.round_done = False
         self.client_map = client_map
         self.all_validators = ps | set([self])
+        self.terminate_count = 0
 
     def run():
         while True:
@@ -72,7 +73,18 @@ class Validator(process):
                         ),
                         to=self.ps,
                     )
-            if await (self.main.round_done or len(self.mempool.queue) > 0):
+            if await (
+                self.main.round_done
+                or len(self.mempool.queue) > 0
+                or self.terminate_count == len(self.client_map)
+            ):
+                if self.terminate_count == len(self.client_map):
+                    print(
+                        "Received exit \n Validator: {} \n Ledger state: {}".format(
+                            self.validator_id, self.main.ledger.display()
+                        )
+                    )
+                    break
                 self.main.round_done = False
             elif timeout(5):
                 print(
@@ -229,6 +241,9 @@ class Validator(process):
                 ),
                 to=ps,
             )
+
+    def receive(msg=("Client-Exit"), from_=source):
+        self.terminate_count += 1
 
     def get_validator_id():
         return self.validator_id
