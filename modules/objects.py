@@ -349,7 +349,7 @@ Failure = namedtuple(
 
 failure_cases = [
     {
-        "msg": "Minority fail: Message Loss",
+        "msg": "No Failures: Successful run",
         "rules": FailureConfig(
             failures=[],
             seed=0,
