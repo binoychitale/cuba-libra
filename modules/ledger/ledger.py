@@ -23,22 +23,28 @@ class Ledger:
 
     def commit(self, block_id: str, block_tree: BlockTree):
         block_to_commit = block_tree.pending_block_tree.find(block_id)
-        print(
-            "Ledger: ",
-            list(([trx.command for trx in cb.block.payload] for cb in self.ledger)),
-            "Validator {}".format(self.id),
-        )
-        print("Rounds: ", [cb.block.round for cb in self.ledger])
-
         self.ledger.append(
             CommittedBlock(block_to_commit, self.get_pending_state(block_id))
         )
+        transactions_to_dq = list(trx.id for trx in block_to_commit.payload)
+        # print(
+        #     "Ledger: ",
+        #     list(([trx.command for trx in cb.block.payload] for cb in self.ledger)),
+        #     "Validator {}".format(self.id),
+        #     "TXNS {}".format(transactions_to_dq),
+        #     "Block: ",
+        #     list(trx.command for trx in block_to_commit.payload),
+        #     "Block ID: {}".format(block_to_commit.id),
+        # )
+        # print("Rounds: ", [cb.block.round for cb in self.ledger])
+        # print
         with open("ledger-pid-" + str(self.id), "a") as ledger_file:
             commands = []
             for txn in block_to_commit.payload:
                 commands.append(txn.command + "\n")
             ledger_file.writelines(commands)
             ledger_file.flush()
+        return transactions_to_dq
 
     def get_committed_block(self, block_id: str) -> CommittedBlock:
         for block in self.ledger:

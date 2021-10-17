@@ -73,7 +73,7 @@ class RunDiemBFT(process):
 
 
 def main():
-    config(clock="Lamport")
+    config(channel="fifo")
     configs = generate_test_configs()
     for config in configs:
         for failure in failure_cases:

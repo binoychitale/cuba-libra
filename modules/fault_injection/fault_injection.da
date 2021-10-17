@@ -64,11 +64,16 @@ class ValidatorFI(process, Validator):
                 if to_fail[0] == 0:
                     break
                 elif failure.fail_type == FailType.Delay:
+                    print(
+                    "DELAY ON------------------------------------------------------------------------------------------")
                     time.sleep(failure.val)
                 elif failure.fail_type == FailType.MsgLoss:
+                    print(
+                    "MSG LOSS ON------------------------------------------------------------------------------------------")
                     return
                 elif failure.fail_type == FailType.SetAttr:
                     if failure.attr == "round":
+                        print("FOUND ROUND INJECTION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                         super().set_current_round(failure.val)
                     elif failure.attr == "highest_vote_round":
                         super().set_highest_vote_round(failure.val)

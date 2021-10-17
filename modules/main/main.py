@@ -44,17 +44,21 @@ class Main:
         self.round_done = False
 
     def process_certificate_qc(self, qc: QuorumCertificate) -> None:
-        self.block_tree.process_qc(qc)
+        trx_to_dq = self.block_tree.process_qc(qc)
+
         # TODO Fix this self.leader_election.update_leaders(qc, self.pacemaker, self.ledger)
         self.pacemaker.advance_round_qc(qc)
 
+        return trx_to_dq
+
     def process_proposal_msg(self, proposal: ProposalMessage) -> Union[None, VoteMsg]:
+        trx_to_dq = []
         if proposal.block.qc:
-            self.process_certificate_qc(proposal.block.qc)
+            trx_to_dq = self.process_certificate_qc(proposal.block.qc)
             self.process_certificate_qc(proposal.high_commit_qc)
         if proposal.last_round_tc:
             if not self.safety.verify_tc(proposal.last_round_tc):
-                return None
+                return (None, trx_to_dq)
             self.pacemaker.advance_round_tc(proposal.last_round_tc)
 
         current_round = self.pacemaker.current_round
@@ -64,9 +68,9 @@ class Main:
             proposal.block.round != current_round
             or proposal.sender_id != leader
             or proposal.block.author != leader
-            or len(proposal.block.payload) == 0
+            or (len(proposal.block.payload) == 0 and len(self.block_tree.pending_block_tree.find(proposal.block.qc.vote_info.id).payload) == 0)
         ):
-            return None
+            return (None, trx_to_dq)
 
         self.block_tree.execute_and_insert(proposal.block)
         vote_msg = self.safety.make_vote(
@@ -77,12 +81,12 @@ class Main:
         )
 
         if not vote_msg:
-            return None
+            return (None, trx_to_dq)
 
         # TODO: Capture return value and send to leader election
         # send vote_msg to LeaderElection.get_leader(round+1)
         self.pacemaker.start_timer(self.pacemaker.current_round + 1)
-        return vote_msg
+        return (vote_msg, trx_to_dq)
 
     def process_new_round_event(self, last_tc: TimeoutCertificate) -> ProposalMessage:
         # TODO: Identify and use U
@@ -117,13 +121,15 @@ class Main:
         return self.process_new_round_event(timeout_certificate)
 
     def process_vote_msg(self, vote_message: VoteMsg) -> None:
-        qc = self.block_tree.process_vote(vote_message)
+        process_vote_res = self.block_tree.process_vote(vote_message)
+        qc = process_vote_res[0]
+        trx_to_dq = process_vote_res[1]
         if not qc:
-            return None
+            return (None, trx_to_dq)
 
         self.process_certificate_qc(qc)
         # self.process_new_round_event(None)  # TODO: Important to figure out why
-        return qc
+        return (qc, trx_to_dq)
 
     def start_event_processing(self, event: Event) -> None:
         event_type = event.get_event_type
@@ -143,8 +149,8 @@ class Main:
     def check_if_current_leader(self):
         return self.leader_election.get_leader(self.pacemaker.current_round) == self.id
 
-    def get_next_proposal(self, new_qc):
-        trx_id_list, transactions = self.get_transactions()
+    def get_next_proposal(self, new_qc, old_tx_ids):
+        trx_id_list, transactions = self.get_transactions(old_tx_ids)
         new_block = self.block_tree.generate_block(
             transactions, self.pacemaker.current_round
         )
@@ -152,11 +158,18 @@ class Main:
         # self.pacemaker.start_timer(self.pacemaker.current_round + 1)
         return ProposalMessage(new_block, None, new_qc, None, self.id, trx_id_list)
 
-    def get_transactions(self):
+    def get_transactions(self, old_txids=[]):
         trx_id_list, transactions = [], []
-        block_requests = list(
-            itertools.islice(self.mempool.queue.items(), 0, self.block_tree.block_size)
-        )
+        # block_requests = list(
+        #     itertools.islice(self.mempool.queue.items(), 0, self.block_tree.block_size)
+        # )
+        block_requests = []
+        print(old_txids, self.mempool.queue.keys())
+        for (k, v) in self.mempool.queue.items():
+            if k not in old_txids:
+                block_requests.append((k, v))
+            if len(block_requests) ==  self.block_tree.block_size:
+                break
         for id, transaction in block_requests:
             trx_id_list.append(id)
             transactions.append(transaction)

@@ -16,13 +16,14 @@ class BlockTree:
         self.id = id
 
     def process_qc(self, qc: QuorumCertificate):
+        trx_to_dq = []
         if not qc:
-            return None
+            return trx_to_dq
         if qc.ledger_commit_info.commit_state_id is not None and (
             self.high_commit_qc is None
             or qc.vote_info.round > self.high_commit_qc.vote_info.round
         ):
-            self.ledger.commit(qc.vote_info.id, self)
+            trx_to_dq = self.ledger.commit(qc.vote_info.id, self)
             self.pending_block_tree.prune(qc.vote_info)
             self.high_commit_qc = (
                 qc
@@ -41,6 +42,7 @@ class BlockTree:
             )
             else self.high_qc
         )
+        return trx_to_dq
 
     def execute_and_insert(self, b: Block):
         # TODO get actual transactions and pass them into speculate
@@ -48,7 +50,7 @@ class BlockTree:
         self.pending_block_tree.add(b)
 
     def process_vote(self, vote: VoteMsg):
-        self.process_qc(vote.high_commit_qc)
+        dq_txns = self.process_qc(vote.high_commit_qc)
         vote_key = hash(vote.ledger_commit_info.fields())
         self.pending_votes[vote_key] = (
             self.pending_votes[vote_key] if vote_key in self.pending_votes else []
@@ -63,13 +65,13 @@ class BlockTree:
             qc = QuorumCertificate(
                 vote.vote_info, vote.ledger_commit_info, signatures, self.id, author_sig
             )
-            return qc
-
+            return (qc, dq_txns)
+        return (None, dq_txns)
     def generate_block(self, txns: List[Transaction], current_round: int):
         commands = []
         for trans in txns:
             commands.append(trans.command)
-        return Block(
+        b = Block(
             self.id,
             current_round,
             txns,
@@ -78,10 +80,12 @@ class BlockTree:
                 str(self.id)
                 + str(current_round)
                 + ",".join(commands)
-                + str(self.high_qc.vote_info.id)
+                + (str(self.high_qc.vote_info.id)
                 if self.high_qc
-                else "" + ",".join(self.high_qc.signatures)
+                else "") + (",".join(self.high_qc.signatures)
                 if self.high_qc is not None
-                else "",
+                else ""),
             ),
         )
+
+        return b

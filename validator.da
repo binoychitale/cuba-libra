@@ -137,7 +137,16 @@ class Validator(process):
         if not verified_proposal:
             raise Exception("There is an imposter among us !!")
 
-        vote: VoteMsg = self.main.process_proposal_msg(verified_proposal)
+        process_prop_resp = self.main.process_proposal_msg(verified_proposal)
+        vote: VoteMsg = process_prop_resp[0]
+        trx_to_dq = process_prop_resp[1]
+        trx_client_map = self.main.deque_trx(trx_to_dq)
+        print("dq_trx", trx_to_dq)
+        for trx_id, client_id in trx_client_map.items():
+            send(
+                ("Client-Reply", (trx_id, self.validator_id)),
+                to=self.client_map[client_id],
+            )
         next_leader = self.main.leader_election.get_leader(
             self.main.pacemaker.current_round
         )
@@ -181,7 +190,17 @@ class Validator(process):
         if not verified_vote:
             raise Exception("There is an imposter among us !!")
 
-        new_qc = self.main.process_vote_msg(verified_vote)
+        process_vote_res = self.main.process_vote_msg(verified_vote)
+
+        new_qc = process_vote_res[0]
+        dq_txns = process_vote_res[1]
+        trx_client_map = self.main.deque_trx(dq_txns)
+        for trx_id, client_id in trx_client_map.items():
+            send(
+                ("Client-Reply", (trx_id, self.validator_id)),
+                to=self.client_map[client_id],
+            )
+
         if new_qc:
             trx_client_map = self.main.deque_trx(trx_ids)
             for trx_id, client_id in trx_client_map.items():
@@ -190,10 +209,10 @@ class Validator(process):
                     to=self.client_map[client_id],
                 )
 
-            send(
-                ("Deque-Transaction", trx_ids),
-                to=self.ps,
-            )
+            # send(
+            #     ("Deque-Transaction", trx_ids),
+            #     to=self.ps,
+            # )
             """await(some(received(('Dequed', id)), has = (
                 id == self.main.leader_election.get_leader(self.main.pacemaker.current_round)
             )))"""
@@ -204,7 +223,7 @@ class Validator(process):
                 elif timeout(5):
                     break"""
 
-            next_proposal = self.main.get_next_proposal(new_qc)
+            next_proposal = self.main.get_next_proposal(new_qc, trx_ids)
             if next_proposal:
                 send(
                     (
