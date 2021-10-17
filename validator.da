@@ -43,7 +43,7 @@ class Validator(process):
         ledger = Ledger(id)
         block_tree = BlockTree(ledger, f, id)
         leader_election = LeaderElection(len(public_key_map.keys()))
-        pacemaker = Pacemaker(f, id)
+        pacemaker = Pacemaker(f, id, leader_election)
         self.mempool = MemPool()
         self.main = Main(
             block_tree, leader_election, pacemaker, safety, ledger, mempool, id
@@ -85,7 +85,7 @@ class Validator(process):
             ):
                 if self.terminate_count == len(self.client_map):
                     print(
-                        "Received exit \n Validator: {} \n Ledger state: {}".format(
+                        "Received exit \n Validator: {} \n Ledger state: {} \n".format(
                             self.validator_id, self.main.ledger.display()
                         )
                     )

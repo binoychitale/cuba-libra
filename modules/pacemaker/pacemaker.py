@@ -12,7 +12,7 @@ from modules.utils import helpers as date_utils
 
 
 class Pacemaker:
-    def __init__(self, f: int, id: int) -> None:
+    def __init__(self, f: int, id: int, leader_election) -> None:
         self.current_round: int = 0
         self.last_round_tc: TimeoutCertificate = None
         self.pending_timeouts: Dict[
@@ -22,6 +22,7 @@ class Pacemaker:
         self.f: int = f
         self.round_done = False
         self.id = id
+        self.leader_election = leader_election
 
     def start_timer(self, new_round: int) -> None:
         self.timer_start = date_utils.getTimeMillis()
@@ -72,6 +73,9 @@ class Pacemaker:
                 self.extract_timeout_signatures,
                 self.pending_timeouts[tmo_info.round].values(),
             )
+            if self.id != self.leader_election.get_leader(self.current_round):
+                self.start_timer(self.current_round + 1)
+                return None
             return TimeoutCertificate(
                 tmo_info.round, high_qc_rounds, timeout_signatures
             )  # TODO add implementation here
