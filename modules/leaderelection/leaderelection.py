@@ -1,5 +1,5 @@
 import random
-from typing import Any, Dict, List, Optional
+from typing import Dict, Optional
 
 from modules.ledger.ledger import Ledger
 from modules.objects import QuorumCertificate

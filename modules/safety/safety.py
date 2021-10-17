@@ -1,6 +1,6 @@
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, Optional, Tuple, Union
 
-from nacl.signing import SignedMessage, SigningKey, VerifyKey
+from nacl.signing import SigningKey, VerifyKey
 
 from modules.block_tree.block_tree import BlockTree
 from modules.ledger.ledger import Ledger
