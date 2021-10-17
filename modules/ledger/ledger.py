@@ -1,8 +1,8 @@
 import logging
-from typing import Any, Dict, List, Union
+from typing import Dict, List, Union
 
 from modules.block_tree.block_tree import BlockTree
-from modules.objects import Block, CommittedBlock, Transaction
+from modules.objects import CommittedBlock, Transaction
 
 logger = logging.getLogger(__name__)
 

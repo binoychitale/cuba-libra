@@ -1,10 +1,8 @@
 import pickle
 from collections import namedtuple
 from enum import Enum
-from os import stat
 from typing import Any, Dict, List, Optional, Tuple
 
-from nacl import encoding
 from nacl.encoding import HexEncoder
 from nacl.exceptions import BadSignatureError, CryptoError
 from nacl.hash import sha256
