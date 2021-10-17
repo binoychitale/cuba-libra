@@ -326,8 +326,177 @@ class TestConfig:
         self.num_clients = num_clients
 
 
+class MsgType(Enum):
+    Proposal = 1
+    QC = 2
+    TimeOut = 3
+    Vote = 4
+    Wildcard = 5  # matches all message types
+
+
+class FailType(Enum):
+    MsgLoss = 1
+    Delay = 2
+    SetAttr = 3
+
+
+FailureConfig = namedtuple("FailureConfig", ["failures", "seed"])
+Failure = namedtuple(
+    "Failure",
+    ["src", "dest", "msg_type", "round", "prob", "fail_type", "val", "attr"],
+)
+
+
+failure_cases = [
+    # {
+    #     "msg": "Minority fail: Message Loss",
+    #     "rules": FailureConfig(
+    #         failures=[
+    #
+    #         ],
+    #         seed=0,
+    #     ),
+    # },
+    # {
+    #     "msg": "Minority fail: Message Loss",
+    #     "rules": FailureConfig(
+    #         failures=[
+    #             Failure(
+    #                 src=0,
+    #                 dest="_",
+    #                 msg_type=MsgType.Wildcard,
+    #                 round=1,
+    #                 prob=1,
+    #                 fail_type=FailType.MsgLoss,
+    #                 val=None,
+    #                 attr=None,
+    #             )
+    #         ],
+    #         seed=0,
+    #     ),
+    # },
+    # {
+    #     "msg": "Minority fail: Message Delay",
+    #     "rules": FailureConfig(
+    #         failures=[
+    #             Failure(
+    #                 src=0,
+    #                 dest="_",
+    #                 msg_type=MsgType.Wildcard,
+    #                 round=1,
+    #                 prob=1,
+    #                 fail_type=FailType.Delay,
+    #                 val=10,
+    #                 attr=None,
+    #             )
+    #         ],
+    #         seed=0,
+    #     ),
+    # },
+    # {
+    #     "msg": "Majority fail: Validator vote delay",
+    #     "rules": FailureConfig(
+    #         failures=[
+    #             Failure(
+    #                 src="_",
+    #                 dest="leader",
+    #                 msg_type=MsgType.Vote,
+    #                 round=1,
+    #                 prob=1,
+    #                 fail_type=FailType.Delay,
+    #                 val=7,
+    #                 attr=None,
+    #             )
+    #         ],
+    #         seed=0
+    #     )
+    # },
+    # {
+    #     "msg": "Chained falure: Validator proposal loss(round 1) + follower vote loss (ronud 2)",
+    #     "rules": FailureConfig(
+    #         failures=[
+    #             Failure(
+    #                 src="leader",
+    #                 dest="_",
+    #                 msg_type=MsgType.Proposal,
+    #                 round=1,
+    #                 prob=1,
+    #                 fail_type=FailType.Delay,
+    #                 val=None,
+    #                 attr=None,
+    #             ),
+    #             Failure(
+    #                 src="_",
+    #                 dest="leader",
+    #                 msg_type=MsgType.Vote,
+    #                 round=2,
+    #                 prob=1,
+    #                 fail_type=FailType.Delay,
+    #                 val=None,
+    #                 attr=None,
+    #             ),
+    #         ],
+    #         seed=0
+    #     ),
+    # },
+    {
+        "msg": "Invalid round number",
+        "rules": FailureConfig(
+            failures=[
+                Failure(
+                    src=1,
+                    dest="_",
+                    msg_type=MsgType.Wildcard,
+                    round=3,
+                    prob=1,
+                    fail_type=FailType.SetAttr,
+                    val=1,
+                    attr='round',
+                ),
+            ],
+            seed=0
+        ),
+    },
+    # {
+    #     "msg": "Majority fail: Message Delay",
+    #     "rules": [
+    #         Failure(
+    #             src=0,
+    #             dest="_",
+    #             msg_type=MsgType.Wildcard,
+    #             round=1,
+    #             prob=1,
+    #             fail_type=FailType.Delay,
+    #             val=7,
+    #             attr=None,
+    #         ),
+    #         Failure(
+    #             src=1,
+    #             dest="_",
+    #             msg_type=MsgType.Wildcard,
+    #             round=1,
+    #             prob=1,
+    #             fail_type=FailType.Delay,
+    #             val=None,
+    #             attr=None,
+    #         ),
+    #     ],
+    # },
+    # Failure(
+    #     src="leader",
+    #     dest="_",
+    #     msg_type=MsgType.Vote,
+    #     round=3,
+    #     prob=0.5,
+    #     fail_type=FailType.SetAttr,
+    #     val=2,
+    #     attr="highest_vote_round",
+    # ),
+]
+
+
 def generate_test_configs() -> List[TestConfig]:
-    n_validators = [5, 10]
+    n_validators = [4, 10]
     n_clients = [10, 2]
     tests = []
 
@@ -354,135 +523,3 @@ def generate_test_configs() -> List[TestConfig]:
         )
 
     return [TestConfig(**config) for config in tests]
-
-
-class MsgType(Enum):
-    Proposal = 1
-    QC = 2
-    TimeOut = 3
-    Vote = 4
-    Wildcard = 5  # matches all message types
-
-
-class FailType(Enum):
-    MsgLoss = 1
-    Delay = 2
-    SetAttr = 3
-
-
-FailureConfig = namedtuple("FailureConfig", ["failures", "seed"])
-Failure = namedtuple(
-    "Failure",
-    ["src", "dest", "msg_type", "round", "prob", "fail_type", "val", "attr"],
-)
-
-
-failure_cases = [
-    {
-        "msg": "Minority fail: Message Loss",
-        "rules": [
-            Failure(
-                src=0,
-                dest="_",
-                msg_type=MsgType.Wildcard,
-                round=1,
-                prob=1,
-                fail_type=FailType.MsgLoss,
-                val=None,
-                attr=None,
-            )
-        ],
-    },
-    {
-        "msg": "Majority fail: Message Loss",
-        "rules": [
-            Failure(
-                src=0,
-                dest="_",
-                msg_type=MsgType.Wildcard,
-                round=1,
-                prob=1,
-                fail_type=FailType.MsgLoss,
-                val=None,
-                attr=None,
-            ),
-            Failure(
-                src=1,
-                dest="_",
-                msg_type=MsgType.Wildcard,
-                round=1,
-                prob=1,
-                fail_type=FailType.MsgLoss,
-                val=None,
-                attr=None,
-            ),
-        ],
-    },
-    {
-        "msg": "Minority fail: Message Delay",
-        "rules": [
-            Failure(
-                src=0,
-                dest="_",
-                msg_type=MsgType.Wildcard,
-                round=1,
-                prob=1,
-                fail_type=FailType.Delay,
-                val=None,
-                attr=None,
-            )
-        ],
-    },
-    {
-        "msg": "Majority fail: Message Delay",
-        "rules": [
-            Failure(
-                src=0,
-                dest="_",
-                msg_type=MsgType.Wildcard,
-                round=1,
-                prob=1,
-                fail_type=FailType.Delay,
-                val=None,
-                attr=None,
-            ),
-            Failure(
-                src=1,
-                dest="_",
-                msg_type=MsgType.Wildcard,
-                round=1,
-                prob=1,
-                fail_type=FailType.Delay,
-                val=None,
-                attr=None,
-            ),
-        ],
-    },
-    {
-        "msg": "Majority fail: Validator vote delay",
-        "rules": [
-            Failure(
-                src="_",
-                dest="leader",
-                msg_type=MsgType.Vote,
-                round=1,
-                prob=1,
-                fail_type=FailType.Delay,
-                val=None,
-                attr=None,
-            )
-        ],
-    },
-    # Failure(
-    #     src="leader",
-    #     dest="_",
-    #     msg_type=MsgType.Vote,
-    #     round=3,
-    #     prob=0.5,
-    #     fail_type=FailType.SetAttr,
-    #     val=2,
-    #     attr="highest_vote_round",
-    # ),
-]
-
-# failure_cases = []

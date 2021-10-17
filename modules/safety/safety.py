@@ -58,15 +58,14 @@ class Safety:
     def _is_safe_to_timeout(
         self, round: int, qc_round: int, tc: TimeoutCertificate
     ) -> bool:
-        print(round, qc_round)
         if (qc_round < self.highest_qc_round) or (
             round <= max(self.highest_vote_round - 1, qc_round)
         ):
             return False
 
-        return (
-            qc_round == -1 or self._is_consecutive(round, qc_round)
-        ) or self._is_consecutive(round, tc.round)
+        return (qc_round == -1 or self._is_consecutive(round, qc_round)) or (
+            tc is None or self._is_consecutive(round, tc.round)
+        )
 
     def _commit_state_id_candidate(
         self, block_round: int, qc: QuorumCertificate, ledger: Ledger
@@ -135,7 +134,7 @@ class Safety:
         ):
             return None
 
-        self._increase_highest_vote_round(round)
+        # self._increase_highest_vote_round(round)
         # TODO: Construct timeout info properly
         return TimeoutInfo(round, high_qc, sender=self.id, signature=None)
 

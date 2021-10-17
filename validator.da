@@ -35,6 +35,7 @@ class Validator(process):
         validator_keypair_map: Dict[int, Tuple[SigningKey, VerifyKey]],
         client_map: Dict[int, client.Client],
         client_keypair_map: Dict[int, Tuple[SigningKey, VerifyKey]],
+        parent,
     ):
         # do any additional setup here
         self.local_timeout_time = round(time.time() * 1000)
@@ -43,7 +44,7 @@ class Validator(process):
         ledger = Ledger(id)
         block_tree = BlockTree(ledger, f, id)
         leader_election = LeaderElection(len(public_key_map.keys()))
-        pacemaker = Pacemaker(f, id)
+        pacemaker = Pacemaker(f, id, leader_election)
         self.mempool = MemPool()
         self.main = Main(
             block_tree, leader_election, pacemaker, safety, ledger, mempool, id
@@ -55,6 +56,7 @@ class Validator(process):
         self.all_validators = ps | set([self])
         self.terminate_count = 0
         self.client_keypair_map = client_keypair_map
+        self.parent = parent
 
     def run():
         init_state = True
@@ -79,33 +81,33 @@ class Validator(process):
                         to=self.ps,
                     )
             if await (
-                self.main.round_done
-                or len(self.mempool.queue) > 0
-                or self.terminate_count == len(self.client_map)
+                self.main.round_done or self.terminate_count == len(self.client_map)
             ):
                 if self.terminate_count == len(self.client_map):
                     print(
-                        "Received exit \n Validator: {} \n Ledger state: {}".format(
+                        "Received exit \n Validator: {} \n Ledger state: {} \n".format(
                             self.validator_id, self.main.ledger.display()
                         )
                     )
+                    send(("Terminate"), to=self.parent)
                     break
                 self.main.round_done = False
             elif timeout(5):
                 print(
-                    "Local timeout at %s for round %s"
-                    % (self.validator_id, self.main.pacemaker.current_round)
+                    "Local timeout at %s for round %s (%s)"
+                    % (self.validator_id, self.main.pacemaker.current_round, self)
                 )
-
+                init_state = False
                 timeout_msg: TimeoutMessage = self.main.pacemaker.local_timeout_round(
                     self.main.safety, self.main.block_tree
                 )
+                self.process_timeout(timeout_msg)
                 send(
                     (
                         "Message-Timeout",
                         (timeout_msg.create_signed_payload(key_pair[0])),
                     ),
-                    to=self.all_validators,
+                    to=self.ps,
                 )
 
     # Have a separate receive handler for each type of message
@@ -123,20 +125,28 @@ class Validator(process):
 
     def receive(msg=("Message-Proposal", body), from_=source):
         # Handle message proposal
-        print(
-            "Proposal received at: %s for round: %s"
-            % (self.validator_id, self.main.pacemaker.current_round)
-        )
-
         proposal: ProposalMessage = body[0]
         signed_proposal: SignedMessage = body[1]
+        print(
+            "Proposal received at: %s for round: %s from %s"
+            % (self.validator_id, proposal.block.round, source)
+        )
         verified_proposal: ProposalMessage = Signatures.verify_signed_payload(
             signed_proposal, validator_keypair_map[proposal.sender_id][1]
         )
         if not verified_proposal:
             raise Exception("There is an imposter among us !!")
 
-        vote: VoteMsg = self.main.process_proposal_msg(verified_proposal)
+        process_prop_resp = self.main.process_proposal_msg(verified_proposal)
+        vote: VoteMsg = process_prop_resp[0]
+        trx_to_dq = process_prop_resp[1]
+        trx_client_map = self.main.deque_trx(trx_to_dq)
+        print("dq_trx", trx_to_dq)
+        for trx_id, client_id in trx_client_map.items():
+            send(
+                ("Client-Reply", (trx_id, self.validator_id)),
+                to=self.client_map[client_id],
+            )
         next_leader = self.main.leader_election.get_leader(
             self.main.pacemaker.current_round
         )
@@ -180,7 +190,17 @@ class Validator(process):
         if not verified_vote:
             raise Exception("There is an imposter among us !!")
 
-        new_qc = self.main.process_vote_msg(verified_vote)
+        process_vote_res = self.main.process_vote_msg(verified_vote)
+
+        new_qc = process_vote_res[0]
+        dq_txns = process_vote_res[1]
+        trx_client_map = self.main.deque_trx(dq_txns)
+        for trx_id, client_id in trx_client_map.items():
+            send(
+                ("Client-Reply", (trx_id, self.validator_id)),
+                to=self.client_map[client_id],
+            )
+
         if new_qc:
             trx_client_map = self.main.deque_trx(trx_ids)
             for trx_id, client_id in trx_client_map.items():
@@ -189,10 +209,10 @@ class Validator(process):
                     to=self.client_map[client_id],
                 )
 
-            send(
-                ("Deque-Transaction", trx_ids),
-                to=self.ps,
-            )
+            # send(
+            #     ("Deque-Transaction", trx_ids),
+            #     to=self.ps,
+            # )
             """await(some(received(('Dequed', id)), has = (
                 id == self.main.leader_election.get_leader(self.main.pacemaker.current_round)
             )))"""
@@ -203,7 +223,7 @@ class Validator(process):
                 elif timeout(5):
                     break"""
 
-            next_proposal = self.main.get_next_proposal(new_qc)
+            next_proposal = self.main.get_next_proposal(new_qc, trx_ids)
             if next_proposal:
                 send(
                     (
@@ -234,10 +254,14 @@ class Validator(process):
 
     def receive(msg=("Message-Timeout", body), from_=source):
         # Handle remote timeout message
-        print(f"Timeout received at: {id}")
 
         timeout_msg: TimeoutMessage = body[0]
         signed_timeout: SignedMessage = body[1]
+
+        print(
+            f"Timeout received at: {self.validator_id} for round {timeout_msg.tmo_info.round} from {source}"
+        )
+
         verified_timeout_msg: TimeoutMessage = Signatures.verify_signed_payload(
             signed_timeout, validator_keypair_map[timeout_msg.id][1]
         )
@@ -245,10 +269,13 @@ class Validator(process):
         if not verified_timeout_msg:
             raise Exception("There is an imposter among us !!")
 
-        new_proposal = self.main.process_timeout_msg(verified_timeout_msg)
+        self.process_timeout(verified_timeout_msg)
+
+    def process_timeout(timeout_msg):
+        new_proposal = self.main.process_timeout_msg(timeout_msg)
         if new_proposal:
             print(
-                f"Timeout certificate at: {id} for round {new_proposal.last_round_tc.round}"
+                f"Timeout certificate at: {self.validator_id} for round {new_proposal.last_round_tc.round}"
             )
             send(
                 (
