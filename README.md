@@ -129,7 +129,12 @@ function get_round_timer).
     - Receive statements: 2
     - Receive handlers: 8
 
-## Contributions. 
+## Contributors
+- Akshay Somaiyaji(SBU ID: 113322316)
+- Rakshith Raj(SBU ID: 113167737)
+- Binoy Chitale(SBU ID: 113140721)
+
+## Contributions.
 
 |   Module              |   Authors     
 |   :-------            |   -------:    
