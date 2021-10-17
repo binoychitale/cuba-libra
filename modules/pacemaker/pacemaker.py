@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List
+from typing import Dict
 
 from modules.block_tree.block_tree import BlockTree
 from modules.objects import (

@@ -1,22 +1,17 @@
-import itertools
 import logging
 from typing import Dict, List, Tuple, Union
 
-from modules import mempool
 from modules.block_tree.block_tree import BlockTree
 from modules.leaderelection.leaderelection import LeaderElection
 from modules.ledger.ledger import Ledger
 from modules.mempool.mempool import MemPool
 from modules.objects import (
-    Block,
     Event,
     EventType,
-    Proposal,
     ProposalMessage,
     QuorumCertificate,
     TimeoutCertificate,
     TimeoutMessage,
-    Transaction,
     VoteMsg,
 )
 from modules.pacemaker.pacemaker import Pacemaker
