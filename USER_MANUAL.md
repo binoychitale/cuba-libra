@@ -28,7 +28,7 @@ docker rm diembft
 docker exec -it diembft bash
 ```
 
-### run distalgo program
+### Run distalgo program
 
 ```bash
 cd /root/cuba-libra

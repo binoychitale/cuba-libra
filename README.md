@@ -54,25 +54,3 @@ a list of each team member’s contributions to this submission.
 
 ## Other comments (optional).
  anything else you want us to know.
-
-
-
-
-### Build the docker container
-```bash
-docker build -t py3.6 .
-```
-### Run the container with mounted directory
-```bash
-docker run --name diembft -v <path_to_project_root_dir>:/root/cuba-libra/ -it py3.6
-```
-### SSH into the container and run distalgo
-```bash
-docker exec -it diembft bash 
-```
-NOTE: The project dir is now mounted in the container. All changes made in editor will reflect in container. You only need to re-run distalgo
-
-### Run distalgo from inside Docker container
-```bash
-python -m da <path-to-da-file>
-```
