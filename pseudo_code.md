@@ -4,7 +4,7 @@ The pseudo code below shows the way in which validators can verify :
 The authenticity of messages from a particular sender
 Authenticity of QC votes and TC timeout messages (To ensure the authenticity of the voter)
 
-```
+```js
 // Safety class methods
 
 // Returns True if the message body matches the decryped signature
@@ -46,7 +46,7 @@ function verifyTC(qc) {
 
 The pseudo-code below demonstrates how the validator’s Mempool should handle duplicate/retransmitted transactions in order to avoid committing a transaction twice
 
-```
+```js
 // MemPool class
 
 pending_transactions = list()
@@ -89,7 +89,7 @@ function new_transaction(transaction) {
 
 Below is the pseudo code for the client to know when a submitted transaction is safely committed
 
-```
+```js
 // Client module
 
 function request_commit(transaction) {
@@ -107,7 +107,7 @@ function request_commit(transaction) {
 ### Syncing up lagging replicas:
 Below is a potential way for lagging replicas to catch up to the block state.
 
-```
+```js
 // Lagging server module
 
 function sync_replica() {
