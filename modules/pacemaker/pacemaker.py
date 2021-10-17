@@ -1,3 +1,4 @@
+import logging
 from typing import Dict
 
 from modules.block_tree.block_tree import BlockTree
@@ -9,6 +10,8 @@ from modules.objects import (
 )
 from modules.safety.safety import Safety
 from modules.utils import helpers as date_utils
+
+logger = logging.getLogger(__name__)
 
 
 class Pacemaker:
@@ -32,12 +35,11 @@ class Pacemaker:
     def local_timeout_round(
         self, safety: Safety, block_tree: BlockTree
     ) -> TimeoutMessage:
-        # TODO: SAVE CONSENSUS STATE
         timeout_info = safety.make_timeout(
             self.current_round, block_tree.high_qc, self.last_round_tc
         )
 
-        # TODO: Broadcast
+        # Send timeout message back to caller which will do the Broadcast to all other validators
         return TimeoutMessage(
             timeout_info, self.last_round_tc, block_tree.high_qc, self.id
         )
@@ -84,6 +86,12 @@ class Pacemaker:
         if tc == None or tc.round < self.current_round:
             return False
         self.last_round_tc = tc
+
+        logger.info(
+            "Advancing Round to {} and starting timer after processing TC of round {}".format(
+                tc.round + 1, tc.round
+            )
+        )
         self.start_timer(tc.round + 1)
         return True
 
@@ -92,5 +100,11 @@ class Pacemaker:
         if qc_round < self.current_round:
             return False
         self.last_round_tc = None
+
+        logger.info(
+            "Advancing Round to {} and starting timer after processing QC of Proposal from round {}".format(
+                qc_round + 1, qc_round
+            )
+        )
         self.start_timer(qc_round + 1)
         return True

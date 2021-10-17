@@ -1,4 +1,6 @@
-from typing import Dict, List, Union
+
+import logging
+from typing import Dict, List, Tuple, Union
 
 from modules.block_tree.block_tree import BlockTree
 from modules.leaderelection.leaderelection import LeaderElection
@@ -15,6 +17,8 @@ from modules.objects import (
 )
 from modules.pacemaker.pacemaker import Pacemaker
 from modules.safety.safety import Safety
+
+logger = logging.getLogger(__name__)
 
 
 class Main:
@@ -46,7 +50,9 @@ class Main:
 
         return trx_to_dq
 
-    def process_proposal_msg(self, proposal: ProposalMessage) -> Union[None, VoteMsg]:
+    def process_proposal_msg(
+        self, proposal: ProposalMessage
+    ) -> Tuple[Union[None, VoteMsg], List[str]]:
         trx_to_dq = []
         if proposal.block.qc:
             trx_to_dq = self.process_certificate_qc(proposal.block.qc)
@@ -92,14 +98,13 @@ class Main:
         return (vote_msg, trx_to_dq)
 
     def process_new_round_event(self, last_tc: TimeoutCertificate) -> ProposalMessage:
-        # TODO: Identify and use U
         if self.id == self.leader_election.get_leader(self.pacemaker.current_round):
             trx_id_list, transactions = self.get_transactions()
             b = self.block_tree.generate_block(
                 transactions, self.pacemaker.current_round
             )
 
-            # TODO: Broadcast and fix signature
+            # TODO: Fix signature
             self.block_tree.execute_and_insert(b)
             return ProposalMessage(
                 b,
@@ -153,21 +158,23 @@ class Main:
         return self.leader_election.get_leader(self.pacemaker.current_round) == self.id
 
     def get_next_proposal(self, new_qc, old_tx_ids):
+        logger.info(
+            "Leader {} Initiating new Proposal for round {}".format(
+                self.leader_election.get_leader(self.pacemaker.current_round),
+                self.pacemaker.current_round,
+            )
+        )
         trx_id_list, transactions = self.get_transactions(old_tx_ids)
         new_block = self.block_tree.generate_block(
             transactions, self.pacemaker.current_round
         )
         self.block_tree.execute_and_insert(new_block)
-        # self.pacemaker.start_timer(self.pacemaker.current_round + 1)
         return ProposalMessage(new_block, None, new_qc, None, self.id, trx_id_list)
 
     def get_transactions(self, old_txids=[]):
         trx_id_list, transactions = [], []
-        # block_requests = list(
-        #     itertools.islice(self.mempool.queue.items(), 0, self.block_tree.block_size)
-        # )
         block_requests = []
-        print(old_txids, self.mempool.queue.keys())
+
         for (k, v) in self.mempool.queue.items():
             if k not in old_txids:
                 block_requests.append((k, v))
@@ -177,11 +184,12 @@ class Main:
             trx_id_list.append(id)
             transactions.append(transaction)
 
-        print(
-            [trx.command for trx in transactions],
-            "round {} validator {}".format(self.pacemaker.current_round, self.id),
+        logger.info(
+            "Round {} Proposal contains Transactions {}".format(
+                self.pacemaker.current_round,
+                ",".join([trx.command for trx in transactions]),
+            ),
         )
-
         return trx_id_list, transactions
 
     def deque_trx(self, trx_ids: List[str]) -> Dict[str, int]:

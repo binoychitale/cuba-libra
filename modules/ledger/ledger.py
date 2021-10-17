@@ -1,7 +1,10 @@
+import logging
 from typing import Dict, List, Union
 
 from modules.block_tree.block_tree import BlockTree
 from modules.objects import CommittedBlock, Transaction
+
+logger = logging.getLogger(__name__)
 
 
 class Ledger:
@@ -27,6 +30,14 @@ class Ledger:
             CommittedBlock(block_to_commit, self.get_pending_state(block_id))
         )
         transactions_to_dq = list(trx.id for trx in block_to_commit.payload)
+        logger.info(
+            "Committed transactions {} proposed by Leader {} in round {} in Validator {}".format(
+                list(trx.command for trx in self.ledger[-1].block.payload),
+                self.ledger[-1].block.author,
+                self.ledger[-1].block.round,
+                self.id,
+            )
+        )
         with open("ledger-pid-" + str(self.id), "a") as ledger_file:
             commands = []
             for txn in block_to_commit.payload:
@@ -41,8 +52,4 @@ class Ledger:
                 return block
 
     def display(self):
-        ledger_disp = []
-        for block in self.ledger:
-            for txn in block.block.payload:
-                ledger_disp.append(txn.command)
-        return ledger_disp
+        return list(([trx.command for trx in cb.block.payload] for cb in self.ledger))
