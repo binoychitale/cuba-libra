@@ -46,28 +46,28 @@ class Client(process):
         while True:
             --receive
             if await (self.terminate == True):
-                output("Client {} terminating".format(self.client_id))
-                send(("Client-Exit"), to=self.validators)
+                # output("Client {} terminating".format(self.client_id))
+                # send(("Client-Exit"), to=self.validators)
                 break
-            elif timeout(10):
-                output("Client {} timed out. Exiting".format(self.client_id))
-                send(("Client-Exit"), to=self.validators)
+            elif timeout(2000):
+                # output("Client {} timed out. Exiting".format(self.client_id))
+                # send(("Client-Exit"), to=self.validators)
                 break
 
     def receive(msg=("Client-Reply", body), from_=source):
-        output(
-            "Received Reply back for trx_id {} in client {} from validator {}".format(
-                body[0], self.client_id, body[1]
-            )
-        )
+        # output(
+        #     "Received Reply back for trx_id {} in client {} from validator {}".format(
+        #         body[0], self.client_id, body[1]
+        #     )
+        # )
         # TODO: Wait for 2f+1 replies
         self.pending_requests[body[0]] = self.pending_requests.get(body[0]) - 1
         if self.pending_requests.get(body[0]) == 0:
             self.pending_requests.pop(body[0])
-        output(
-            "Number of pending requests in client {} = {}".format(
-                self.client_id, len(self.pending_requests)
-            )
-        )
+        # output(
+        #     "Number of pending requests in client {} = {}".format(
+        #         self.client_id, len(self.pending_requests)
+        #     )
+        # )
         if len(self.pending_requests) == 0:
             self.terminate = True

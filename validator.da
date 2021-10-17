@@ -152,17 +152,18 @@ class Validator(process):
                 to=validator_map[next_leader],
             )
         else:
-            output(
-                "Ledger: ",
-                list(
-                    (
-                        [trx.command for trx in cb.block.payload]
-                        for cb in self.main.ledger.ledger
-                    )
-                ),
-                "Validator {}".format(self.validator_id),
-            )
-            output("Rounds: ", [cb.block.round for cb in self.main.ledger.ledger])
+            pass
+            # output(
+            #     "Ledger: ",
+            #     list(
+            #         (
+            #             [trx.command for trx in cb.block.payload]
+            #             for cb in self.main.ledger.ledger
+            #         )
+            #     ),
+            #     "Validator {}".format(self.validator_id),
+            # )
+            # output("Rounds: ", [cb.block.round for cb in self.main.ledger.ledger])
 
     def receive(msg=("Message-Vote", body), from_=source):
         # Handle vote message
@@ -213,13 +214,14 @@ class Validator(process):
                     to=self.ps,
                 )
             else:
-                output(
-                    "Ledger: ",
-                    [trx.command for trx in self.main.ledger.ledger[-1].block.payload],
-                    "Round {}, Validator {}".format(
-                        self.main.pacemaker.current_round, self.validator_id
-                    ),
-                )
+                pass
+                # output(
+                #     "Ledger: ",
+                #     [trx.command for trx in self.main.ledger.ledger[-1].block.payload],
+                #     "Round {}, Validator {}".format(
+                #         self.main.pacemaker.current_round, self.validator_id
+                #     ),
+                # )
 
     def receive(msg=("Deque-Transaction", trx_ids), from_=source):
         trx_client_map = self.main.deque_trx(trx_ids)
@@ -234,10 +236,14 @@ class Validator(process):
 
     def receive(msg=("Message-Timeout", body), from_=source):
         # Handle remote timeout message
-        print(f"Timeout received at: {id}")
 
         timeout_msg: TimeoutMessage = body[0]
         signed_timeout: SignedMessage = body[1]
+
+        print(
+            f"Timeout received at: {self.validator_id} for round {timeout_msg.tmo_info.round} from {timeout_msg.id}"
+        )
+
         verified_timeout_msg: TimeoutMessage = Signatures.verify_signed_payload(
             signed_timeout, validator_keypair_map[timeout_msg.id][1]
         )

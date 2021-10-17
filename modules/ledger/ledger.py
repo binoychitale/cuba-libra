@@ -23,12 +23,16 @@ class Ledger:
 
     def commit(self, block_id: str, block_tree: BlockTree):
         block_to_commit = block_tree.pending_block_tree.find(block_id)
-        print(
-            "Ledger: ",
-            list(([trx.command for trx in cb.block.payload] for cb in self.ledger)),
-            "Validator {}".format(self.id),
-        )
-        print("Rounds: ", [cb.block.round for cb in self.ledger])
+        if not block_to_commit:
+            print("BLOCK WAS EMPTY !!!!!")
+            return None
+
+        # print(
+        #     "Ledger: ",
+        #     list(([trx.command for trx in cb.block.payload] for cb in self.ledger)),
+        #     "Validator {}".format(self.id),
+        # )
+        # print("Rounds: ", [cb.block.round for cb in self.ledger])
 
         self.ledger.append(
             CommittedBlock(block_to_commit, self.get_pending_state(block_id))

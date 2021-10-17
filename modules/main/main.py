@@ -64,7 +64,15 @@ class Main:
             proposal.block.round != current_round
             or proposal.sender_id != leader
             or proposal.block.author != leader
-            or len(proposal.block.payload) == 0
+            or (
+                len(proposal.block.payload) == 0
+                and len(
+                    self.block_tree.pending_block_tree.find(
+                        proposal.block.qc.vote_info.parent_id
+                    ).payload
+                )
+                == 0
+            )
         ):
             return None
 
@@ -161,10 +169,10 @@ class Main:
             trx_id_list.append(id)
             transactions.append(transaction)
 
-        print(
-            [trx.command for trx in transactions],
-            "round {} validator {}".format(self.pacemaker.current_round, self.id),
-        )
+        # print(
+        #     [trx.command for trx in transactions],
+        #     "round {} validator {}".format(self.pacemaker.current_round, self.id),
+        # )
 
         return trx_id_list, transactions
 

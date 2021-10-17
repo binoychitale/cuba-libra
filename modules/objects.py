@@ -98,6 +98,11 @@ class Transaction:
         signed_payload = Signatures.pickle_and_sign_payload(self, signing_key)
         return (self, signed_payload)
 
+    def __repr__(self):
+        from pprint import pformat
+
+        return pformat(vars(self), indent=4, width=1)
+
 
 class Block:
     def __init__(

@@ -19,16 +19,16 @@ class RunDiemBFT(process):
         f = (test_config.nvalidators - 1) // 3
         failure_config = FailureConfig(
             failures=[
-                # Failure(
-                #     src=0,
-                #     dest="_",
-                #     msg_type=MsgType.Wildcard,
-                #     round=1,
-                #     prob=1,
-                #     fail_type=FailType.MsgLoss,
-                #     val=1000,
-                #     attr=None,
-                # ),
+                Failure(
+                    src=0,
+                    dest="_",
+                    msg_type=MsgType.Wildcard,
+                    round=1,
+                    prob=1,
+                    fail_type=FailType.MsgLoss,
+                    val=1000,
+                    attr=None,
+                ),
                 # Failure(
                 #     src=1,
                 #     dest="_",
