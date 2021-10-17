@@ -51,8 +51,8 @@ function verifyTC(qc) {
 ```js
 // MemPool class
 
-pending_transactions = list()
-completed_transactions = list()
+pending_transactions = set()
+completed_transactions = set()
 
 // Fetch <block_size> transactions from the mempool
 function get_transactions() {
@@ -60,20 +60,20 @@ function get_transactions() {
 
  for transaction in pending transactions {
 
-   new_transactions.append(transaction)
+   new_transactions.add(transaction)
 
    if length(new_transactions) == block_size {
-     return transactions
+     return new_transactions
    }
  }
- return transactions
+ return new_transactions
 }
 
 // Remove transactions from the pending queue after they are committed,
 // so that they are not proposed twice
 function dequeue_transaction(transaction) {
 
- completed_transactions.append(transaction)
+ completed_transactions.add(transaction)
 
  pending_transactions.delete(transaction)
 
@@ -84,7 +84,7 @@ function dequeue_transaction(transaction) {
 function new_transaction(transaction) {
 
  if transaction  not in (pending_transaction | completed transactions)
-   pending_transactions.append(transaction)
+   pending_transactions.add(transaction)
 }
 ```
 
