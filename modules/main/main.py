@@ -1,21 +1,16 @@
-import itertools
 from typing import Dict, List, Union
 
-from modules import mempool
 from modules.block_tree.block_tree import BlockTree
 from modules.leaderelection.leaderelection import LeaderElection
 from modules.ledger.ledger import Ledger
 from modules.mempool.mempool import MemPool
 from modules.objects import (
-    Block,
     Event,
     EventType,
-    Proposal,
     ProposalMessage,
     QuorumCertificate,
     TimeoutCertificate,
     TimeoutMessage,
-    Transaction,
     VoteMsg,
 )
 from modules.pacemaker.pacemaker import Pacemaker
@@ -68,7 +63,15 @@ class Main:
             proposal.block.round != current_round
             or proposal.sender_id != leader
             or proposal.block.author != leader
-            or (len(proposal.block.payload) == 0 and len(self.block_tree.pending_block_tree.find(proposal.block.qc.vote_info.id).payload) == 0)
+            or (
+                len(proposal.block.payload) == 0
+                and len(
+                    self.block_tree.pending_block_tree.find(
+                        proposal.block.qc.vote_info.id
+                    ).payload
+                )
+                == 0
+            )
         ):
             return (None, trx_to_dq)
 
@@ -168,7 +171,7 @@ class Main:
         for (k, v) in self.mempool.queue.items():
             if k not in old_txids:
                 block_requests.append((k, v))
-            if len(block_requests) ==  self.block_tree.block_size:
+            if len(block_requests) == self.block_tree.block_size:
                 break
         for id, transaction in block_requests:
             trx_id_list.append(id)
