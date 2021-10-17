@@ -64,7 +64,15 @@ class Main:
             proposal.block.round != current_round
             or proposal.sender_id != leader
             or proposal.block.author != leader
-            or len(proposal.block.payload) == 0
+            or (
+                len(proposal.block.payload) == 0
+                and len(
+                    self.block_tree.pending_block_tree.find(
+                        proposal.block.qc.vote_info.parent_id
+                    ).payload
+                )
+                == 0
+            )
         ):
             return None
 
@@ -104,6 +112,7 @@ class Main:
             )
 
     def process_timeout_msg(self, timeout_message: TimeoutMessage) -> ProposalMessage:
+        # print(timeout_message.tmo_info)
         self.process_certificate_qc(timeout_message.tmo_info.high_qc)
         self.process_certificate_qc(timeout_message.high_commit_qc)
         self.pacemaker.advance_round_tc(timeout_message.last_round_tc)
@@ -161,10 +170,10 @@ class Main:
             trx_id_list.append(id)
             transactions.append(transaction)
 
-        print(
-            [trx.command for trx in transactions],
-            "round {} validator {}".format(self.pacemaker.current_round, self.id),
-        )
+        # print(
+        #     [trx.command for trx in transactions],
+        #     "round {} validator {}".format(self.pacemaker.current_round, self.id),
+        # )
 
         return trx_id_list, transactions
 

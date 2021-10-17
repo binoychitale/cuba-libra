@@ -98,6 +98,11 @@ class Transaction:
         signed_payload = Signatures.pickle_and_sign_payload(self, signing_key)
         return (self, signed_payload)
 
+    def __repr__(self):
+        from pprint import pformat
+
+        return pformat(vars(self), indent=4, width=1)
+
 
 class Block:
     def __init__(
@@ -366,38 +371,41 @@ failure_cases = [
             seed=0,
         ),
     },
-    {
-        "msg": "Minority fail: Message Delay",
-        "rules": FailureConfig(
-            failures=[
-                Failure(
-                    src=0,
-                    dest="_",
-                    msg_type=MsgType.Wildcard,
-                    round=1,
-                    prob=1,
-                    fail_type=FailType.Delay,
-                    val=10,
-                    attr=None,
-                )
-            ],
-            seed=0,
-        ),
-    },
     # {
-    #     "msg": "Majority fail: Validator vote delay",
-    #     "rules": [
-    #         Failure(
-    #             src="_",
-    #             dest="leader",
-    #             msg_type=MsgType.Vote,
-    #             round=1,
-    #             prob=1,
-    #             fail_type=FailType.Delay,
-    #             val=7,
-    #             attr=None,
-    #         )
-    #     ],
+    #     "msg": "Minority fail: Message Delay",
+    #     "rules": FailureConfig(
+    #         failures=[
+    #             Failure(
+    #                 src=0,
+    #                 dest="_",
+    #                 msg_type=MsgType.Wildcard,
+    #                 round=1,
+    #                 prob=1,
+    #                 fail_type=FailType.Delay,
+    #                 val=10,
+    #                 attr=None,
+    #             )
+    #         ],
+    #         seed=0,
+    #     ),
+    # },
+    # {
+    #     "msg": "Validator vote delay",
+    #     "rules": FailureConfig(
+    #         failures=[
+    #             Failure(
+    #                 src="_",
+    #                 dest="leader",
+    #                 msg_type=MsgType.Vote,
+    #                 round=2,
+    #                 prob=1,
+    #                 fail_type=FailType.Delay,
+    #                 val=7,
+    #                 attr=None,
+    #             )
+    #         ],
+    #         seed=0,
+    #     ),
     # },
     # {
     #     "msg": "Chained falure: Validator proposal loss(round 1) + follower vote loss (ronud 2)",

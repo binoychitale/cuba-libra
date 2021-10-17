@@ -13,6 +13,7 @@ class Ledger:
 
     def speculate(self, block_id: str, txns: List[Transaction]) -> int:
         txns = ",".join([trx.command for trx in txns])
+        print(f"Speculated txns: {txns}")
         commit_state_id = (
             self.ledger[-1].commit_state_id if len(self.ledger) > 0 else ""
         )
@@ -23,12 +24,7 @@ class Ledger:
 
     def commit(self, block_id: str, block_tree: BlockTree):
         block_to_commit = block_tree.pending_block_tree.find(block_id)
-        print(
-            "Ledger: ",
-            list(([trx.command for trx in cb.block.payload] for cb in self.ledger)),
-            "Validator {}".format(self.id),
-        )
-        print("Rounds: ", [cb.block.round for cb in self.ledger])
+        # print("Rounds: ", [cb.block.round for cb in self.ledger])
 
         self.ledger.append(
             CommittedBlock(block_to_commit, self.get_pending_state(block_id))
@@ -39,6 +35,12 @@ class Ledger:
                 commands.append(txn.command + "\n")
             ledger_file.writelines(commands)
             ledger_file.flush()
+
+        print(
+            "Validator {}".format(self.id),
+            "Ledger: ",
+            list(([trx.command for trx in cb.block.payload] for cb in self.ledger)),
+        )
 
     def get_committed_block(self, block_id: str) -> CommittedBlock:
         for block in self.ledger:

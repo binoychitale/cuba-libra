@@ -46,7 +46,7 @@ class ValidatorFI(process, Validator):
             if (
                 (failure.src == super().get_validator_id() or failure.src == "_")
                 and (
-                    failure.dest == self.get_pid(to)
+                    failure.dest in self.get_pids(to)
                     or failure.dest == "_"
                     or (
                         failure.dest == "leader"
@@ -66,7 +66,13 @@ class ValidatorFI(process, Validator):
                 elif failure.fail_type == FailType.Delay:
                     time.sleep(failure.val)
                 elif failure.fail_type == FailType.MsgLoss:
-                    return
+                    if failure.dest == "_" or failure.dest == "leader":
+                        return
+                    new_set = set()
+                    for p in to:
+                        if self.get_pid(p) == failure.dest:
+                            new_set.add(p)
+                    to = new_set
                 elif failure.fail_type == FailType.SetAttr:
                     if failure.attr == "round":
                         super().set_current_round(failure.val)
@@ -74,9 +80,15 @@ class ValidatorFI(process, Validator):
                         super().set_highest_vote_round(failure.val)
         super().send(m, to)
 
-    def get_pid(dest_p_obj):
+    def get_pids(dest_p_obj):
+        dest_ids = []
+        for dest in dest_p_obj:
+            dest_ids.append(self.get_pid(dest))
+        return dest_ids
+
+    def get_pid(dest):
         for (id, p_obj) in enumerate(super().get_validator_map()):
-            if dest_p_obj == p_obj:
+            if dest == p_obj:
                 return id
 
     def msg_string_to_enum(msg_type):

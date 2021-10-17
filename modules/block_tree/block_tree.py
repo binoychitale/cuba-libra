@@ -18,12 +18,17 @@ class BlockTree:
     def process_qc(self, qc: QuorumCertificate):
         if not qc:
             return None
-        if qc.ledger_commit_info.commit_state_id is not None and (
-            self.high_commit_qc is None
-            or qc.vote_info.round > self.high_commit_qc.vote_info.round
+        if (
+            qc.ledger_commit_info.commit_state_id is not None
+            and (
+                self.high_commit_qc is None
+                or qc.vote_info.round > self.high_commit_qc.vote_info.round
+            )
+            and qc.vote_info.parent_id is not None
         ):
-            self.ledger.commit(qc.vote_info.id, self)
-            self.pending_block_tree.prune(qc.vote_info)
+            print(f"commit {qc.vote_info.round} at {self.id}")
+            self.ledger.commit(qc.vote_info.parent_id, self)
+            self.pending_block_tree.prune(qc.vote_info.parent_id)
             self.high_commit_qc = (
                 qc
                 if (
