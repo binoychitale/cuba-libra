@@ -43,3 +43,17 @@ The bash script `run.sh` compiles and runs the distalgo files `fault_injection.d
 
 The user manual should also document the
 configuration file format (e.g., plain text or JSON) and structure: the name—and meaning, if it’s not selfevident—of each field and the valid values for each field (if it’s not self-evident).
+Our distalgo configurations come from the `generate_test_configs()` function in `modules/objects.py` file.
+
+Example configuration:
+```
+{
+    "nvalidators": // no. of validators,
+    "validator_key_pairs": // cryptographic keys (generated at runtime),
+    "validator_pubkey_map": // public keys of validators(generated at runtime),
+    "client_key_pairs": // Cryptographic keys for clients((generated at runtime),
+    "client_pubkey_map": // Public keys for clients(generated at runtime),
+    "num_clients": // Number of clients
+
+}
+```

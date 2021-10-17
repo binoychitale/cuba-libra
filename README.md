@@ -14,9 +14,43 @@
     - MacOS running on Apple-M1
 
 ## Workload generation. 
-- describe your design for client workload generation, and mention which file(s)
+Describe your design for client workload generation, and mention which file(s)
 contain the implementation.
 
+Our client workloads and validator count are set in the file `modules/objects.py`.
+An example specification is listed below, taken from the objects.py file.
+```
+// For the first run, use 4 validators and 10 clients
+n_validators = [4, 10]
+n_clients = [10, 2]
+```
+
+We can also specify failures to be induced in these workloads
+in the `failure_cases` object of `modules/objects.py`
+
+Example failure:
+```
+{
+    // Failure description
+    "msg": "Majority fail: Validator vote delay",
+    // Failures that will apply
+    "rules": FailureConfig(
+        failures=[
+            Failure(
+                src="_",
+                dest="leader",
+                msg_type=MsgType.Vote,
+                round=1,
+                prob=1,
+                fail_type=FailType.Delay,
+                val=7,
+                attr=None,
+            )
+        ],
+        seed=0
+    )
+}
+```
 ## Timeouts. 
 ### Akshay fill this
 - discuss your choice of timeout formulas and timeout values for clients and servers (e.g., in
