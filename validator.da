@@ -164,12 +164,10 @@ class Validator(process):
         else:
             output(
                 "Ledger: ",
-                list(
-                    (
-                        [trx.command for trx in cb.block.payload]
-                        for cb in self.main.ledger.ledger
-                    )
-                ),
+                [
+                    [trx.command for trx in cb.block.payload]
+                    for cb in self.main.ledger.ledger
+                ],
                 "Validator {}".format(self.validator_id),
             )
             output("Rounds: ", [cb.block.round for cb in self.main.ledger.ledger])
@@ -208,20 +206,6 @@ class Validator(process):
                     ("Client-Reply", (trx_id, self.validator_id)),
                     to=self.client_map[client_id],
                 )
-
-            # send(
-            #     ("Deque-Transaction", trx_ids),
-            #     to=self.ps,
-            # )
-            """await(some(received(('Dequed', id)), has = (
-                id == self.main.leader_election.get_leader(self.main.pacemaker.current_round)
-            )))"""
-            """num_received = 0
-            while num_received != len(validator_map):
-                if await(some(received(('Dequed')))):
-                    num_received += 1
-                elif timeout(5):
-                    break"""
 
             next_proposal = self.main.get_next_proposal(new_qc, trx_ids)
             if next_proposal:

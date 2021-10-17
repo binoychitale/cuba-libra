@@ -27,17 +27,6 @@ class Ledger:
             CommittedBlock(block_to_commit, self.get_pending_state(block_id))
         )
         transactions_to_dq = list(trx.id for trx in block_to_commit.payload)
-        # print(
-        #     "Ledger: ",
-        #     list(([trx.command for trx in cb.block.payload] for cb in self.ledger)),
-        #     "Validator {}".format(self.id),
-        #     "TXNS {}".format(transactions_to_dq),
-        #     "Block: ",
-        #     list(trx.command for trx in block_to_commit.payload),
-        #     "Block ID: {}".format(block_to_commit.id),
-        # )
-        # print("Rounds: ", [cb.block.round for cb in self.ledger])
-        # print
         with open("ledger-pid-" + str(self.id), "a") as ledger_file:
             commands = []
             for txn in block_to_commit.payload:

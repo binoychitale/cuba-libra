@@ -34,23 +34,85 @@ function get_round_timer).
 - The definition of a validator to which faults can be injected is present in `modules/fault_injection/fault_injection.da`
 
 ## Code size. 
-- (1) report the numbers of non-blank non-comment lines of code (LOC) in your system in
-the following categories: algorithm, other, and total. "algorithm" is for the replica algorithm itself and
-other functionality interleaved with it (logging, instrumentation, etc.). "other" is for everything that
-can easily be separated from the algorithm (clients, configuration, test drivers, etc.). 
-- LOC is obtained using [CLOC](https://github.com/AlDanial/cloc). 
-- Rough estimate of
-how much of the "algorithm" code is for the algorithm itself, and how much is for other functionality
-interleaved with it.
+- Code size: Overall
+    - ```bash
+        cloc <project_folder> --md
+       ```
+    -   cloc|github.com/AlDanial/cloc v 1.81  T=0.01 s (1964.7 files/s, 192127.4 lines/s)
+        --- | ---
+
+        Language|files|blank|comment|code
+        :-------|-------:|-------:|-------:|-------:
+        Python|14|226|164|1251
+        DAL|4|59|1|503
+        Markdown|2|22|0|79
+        TOML|1|1|1|17
+        JSON|1|0|0|14
+        Bourne Shell|1|0|0|6
+        Dockerfile|1|0|0|3
+        --------|--------|--------|--------|--------
+        SUM:|24|308|166|1873
+- Code size: Algorithm
+    - ```bash
+        cloc <project_folder>/modules --md
+       ```
+    - cloc|github.com/AlDanial/cloc v 1.81  T=0.01 s (1438.0 files/s, 165610.4 lines/s)
+        --- | ---
+
+        Language|files|blank|comment|code
+        :-------|-------:|-------:|-------:|-------:
+        Python|11|196|161|932
+        DAL|1|8|0|85
+        --------|--------|--------|--------|--------
+        SUM:|12|204|161|1017
+- Code size: Others
+    - ```bash
+        cloc <project_folder>/modules --md
+       ```
+    - cloc|github.com/AlDanial/cloc v 1.81  T=0.01 s (1303.4 files/s, 168300.0 lines/s)
+        --- | ---
+
+        Language|files|blank|comment|code
+        :-------|-------:|-------:|-------:|-------:
+        DAL|3|51|1|418
+        Python|2|84|128|323
+        TOML|1|1|1|17
+        Bourne Shell|1|0|0|6
+        Dockerfile|1|0|0|3
+        --------|--------|--------|--------|--------
+        SUM:|8|136|130|767
 
 ## Language feature usage
- (for teams using Python or DistAlgo). report the numbers of list
-comprehensions, dictionary comprehensions, set comprehensions, aggregations, quantifications,
-await statements, and receive handlers in your code. the first two are Python features; the others are
-DistAlgo features.
+ - These are computed using simple searches in the IDE. Hence they provide only approximations.
+ - Python features
+    - List comprehensions: ~8
+    - Dict comprehensions: ~8
+    - Set comprehensions: 0
+ - DistAlgo features:
+    - Aggregations: 0
+    - Quantifications: 0
+    - Await statements: 3
+    - Receive statements: 2
+    - Receive handlers: 8
 
 ## Contributions. 
-a list of each team member’s contributions to this submission.
+
+|   Module              |   Authors     
+|   :-------            |   -------:    
+|   Mempool             |   Akshay Somayaji
+|   Leader Election     |   Akshay Somayaji
+|   Client              |   Akshay Somayaji
+|   Dockerfile          |   Akshay Somayaji
+|   Block Tree          |   Binoy Chitale           
+|   Ledger              |   Binoy Chitale
+|   Pacemaker           |   Binoy Chiltale
+|   Fault Injection     |   Binoy Chitale           
+|   Main                |   Rakshith Raj
+|   Safety              |   Rakshith Raj
+|   Objects             |   Rakshith Raj 
+|   Wrapper             |   Rakshith Raj
+|   Validator           |   Akshay Somayaji, Binoy Chiltale, Rakshith Raj
 
 ## Other comments (optional).
- anything else you want us to know.
+ 
+- <anything else you want us to know.>
