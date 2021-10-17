@@ -28,7 +28,6 @@ function verifyQC(qc) {
 }
 
 // Loop through each of the TC signatures, and verify that the encrypted digest can be decrypted and is equal to the body of the TC (this verifies the authenticity of the sender of the timeout message)
-
 function verifyTC(qc) {
 
  for signatures in tc.signatures {
@@ -53,7 +52,6 @@ pending_transactions = list()
 completed_transactions = list()
 
 // Fetch <block_size> transactions from the mempool
-
 function get_transactions() {
  new_transactions = []
 
@@ -69,7 +67,6 @@ function get_transactions() {
 }
 
 // Remove transactions from the pending queue after they are committed, so that they are not proposed twice
-
 function dequeue_transaction(transaction) {
 
  completed_transactions.append(transaction)
@@ -79,7 +76,6 @@ function dequeue_transaction(transaction) {
 }
 
 // When a new transaction arrives, make sure it is not pending(i.e in pending_transactions) and not already committed (i.e in completed_transactions). Only if it is a new transaction, add it to queue
-
 function new_transaction(transaction) {
 
  if transaction  not in (pending_transaction | completed transactions)
@@ -91,7 +87,6 @@ Below is the pseudo code for the client to know when a submitted transaction is 
 
 ```js
 // Client module
-
 function request_commit(transaction) {
 
  broadcast(payload=transaction, to=validators)
@@ -109,7 +104,6 @@ Below is a potential way for lagging replicas to catch up to the block state.
 
 ```js
 // Lagging server module
-
 function sync_replica() {
  validator = some validator in validators
 
