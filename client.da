@@ -30,11 +30,11 @@ class Client(process):
         uid = uuid.uuid4().hex
         transaction = Transaction("hello" + str(self.client_id), uid, self.client_id)
         self.pending_requests[uid] = self.n
-        """output(
+        output(
             "Sending Transaction with trx_id {} from client {}".format(
                 uid, self.client_id
             )
-        )"""
+        )
         send(
             (
                 "Client-Transaction",
