@@ -70,7 +70,7 @@ class Validator(process):
                 and len(self.mempool.queue) > 0
             ):
                 # Send a proposal
-                proposal = self.main.get_next_proposal(None)
+                proposal = self.main.get_next_proposal(None, [])
                 if proposal:
                     init_state = False
                     send(
