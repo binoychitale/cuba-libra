@@ -51,7 +51,10 @@ function verifyTC(qc) {
 ```js
 // MemPool class
 
+// set of transactions pending commit
 pending_transactions = set()
+
+// set of transactions that have been committed
 completed_transactions = set()
 
 // Fetch <block_size> transactions from the mempool
@@ -125,8 +128,11 @@ function sync_replica() {
    // (i.e an indirect hash of the entire chain).
    // This ensures that the the final state(commit_state_id) of the
    // entire chain is agreed upon by at least 2f+1   validators, which means it must be actual state
-   assert(commit_state_id == validator.commit_state_id)
+   if (assert(commit_state_id == validator.commit_state_id)) {
+       commit(new_blocks)
+   } else {
+       // Run same procedure with another validator until consistent state is found
+   }
 
- commit(new_blocks)
 }
 ```
