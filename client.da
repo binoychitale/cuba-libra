@@ -49,7 +49,7 @@ class Client(process):
                 output("Client {} terminating".format(self.client_id))
                 send(("Client-Exit"), to=self.validators)
                 break
-            elif timeout(10):
+            elif timeout(2000):
                 output("Client {} timed out. Exiting".format(self.client_id))
                 send(("Client-Exit"), to=self.validators)
                 break

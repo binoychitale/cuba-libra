@@ -93,6 +93,7 @@ class Main:
             )
 
             # TODO: Broadcast and fix signature
+            self.block_tree.execute_and_insert(b)
             return ProposalMessage(
                 b,
                 last_tc,

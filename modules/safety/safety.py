@@ -58,7 +58,6 @@ class Safety:
     def _is_safe_to_timeout(
         self, round: int, qc_round: int, tc: TimeoutCertificate
     ) -> bool:
-        print(round, qc_round)
         if (qc_round < self.highest_qc_round) or (
             round <= max(self.highest_vote_round - 1, qc_round)
         ):
@@ -135,7 +134,7 @@ class Safety:
         ):
             return None
 
-        self._increase_highest_vote_round(round)
+        # self._increase_highest_vote_round(round)
         # TODO: Construct timeout info properly
         return TimeoutInfo(round, high_qc, sender=self.id, signature=None)
 

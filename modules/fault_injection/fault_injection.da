@@ -24,6 +24,7 @@ class ValidatorFI(process, Validator):
         client_map: Dict[int, client.Client],
         client_keypair_map: Dict[int, Tuple[SigningKey, VerifyKey]],
         failure_config: NamedTuple,
+        parent,
     ):
         self.failure_config = failure_config
         super().setup(
@@ -36,6 +37,7 @@ class ValidatorFI(process, Validator):
             validator_keypair_map,
             client_map,
             client_keypair_map,
+            parent,
         )
         # do any additional setup here
 
