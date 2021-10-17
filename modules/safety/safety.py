@@ -63,9 +63,9 @@ class Safety:
         ):
             return False
 
-        return (
-            qc_round == -1 or self._is_consecutive(round, qc_round)
-        ) or self._is_consecutive(round, tc.round)
+        return (qc_round == -1 or self._is_consecutive(round, qc_round)) or (
+            tc is None or self._is_consecutive(round, tc.round)
+        )
 
     def _commit_state_id_candidate(
         self, block_round: int, qc: QuorumCertificate, ledger: Ledger
