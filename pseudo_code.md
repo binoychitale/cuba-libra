@@ -1,8 +1,8 @@
 ### Cryptographic checking ( Omitted gory details):
 
 The pseudo code below shows the way in which validators can verify :
-The authenticity of messages from a particular sender
-Authenticity of QC votes and TC timeout messages (To ensure the authenticity of the voter)
+1. The authenticity of messages from a particular sender
+2. Authenticity of QC votes and TC timeout messages (To ensure the authenticity of the voter)
 
 ```js
 // Safety class methods
@@ -15,7 +15,8 @@ function verifyMsg(message) {
  return decrypted_signature == message.body
 }
 
-// Loop through each of the QC signatures, and verify that the encrypted digest can be decrypted and is equal to the body of the QC (this verifies the authenticity of the voter)
+// Loop through each of the QC signatures, and verify that the encrypted digest
+// can be decrypted and is equal to the body of the QC (this verifies the authenticity of the voter)
 function verifyQC(qc) {
  for signatures in qc.signatures {
    decrypted_signature = verify(signature.digest, public_key(qc.signature.author))
@@ -27,7 +28,9 @@ function verifyQC(qc) {
  return True
 }
 
-// Loop through each of the TC signatures, and verify that the encrypted digest can be decrypted and is equal to the body of the TC (this verifies the authenticity of the sender of the timeout message)
+// Loop through each of the TC signatures, and verify that the encrypted
+// digest can be decrypted and is equal to the body of the TC (this verifies the
+// authenticity of the sender of the timeout message)
 function verifyTC(qc) {
 
  for signatures in tc.signatures {
@@ -43,7 +46,7 @@ function verifyTC(qc) {
 
 ### Client Message Handling:
 
-The pseudo-code below demonstrates how the validator’s Mempool should handle duplicate/retransmitted transactions in order to avoid committing a transaction twice
+1. The pseudo-code below demonstrates how the validator’s Mempool should handle duplicate/retransmitted transactions in order to avoid committing a transaction twice
 
 ```js
 // MemPool class
@@ -66,7 +69,8 @@ function get_transactions() {
  return transactions
 }
 
-// Remove transactions from the pending queue after they are committed, so that they are not proposed twice
+// Remove transactions from the pending queue after they are committed,
+// so that they are not proposed twice
 function dequeue_transaction(transaction) {
 
  completed_transactions.append(transaction)
@@ -75,7 +79,8 @@ function dequeue_transaction(transaction) {
 
 }
 
-// When a new transaction arrives, make sure it is not pending(i.e in pending_transactions) and not already committed (i.e in completed_transactions). Only if it is a new transaction, add it to queue
+// When a new transaction arrives, make sure it is not pending(i.e in pending_transactions)
+// and not already committed (i.e in completed_transactions). Only if it is a new transaction, add it to queue
 function new_transaction(transaction) {
 
  if transaction  not in (pending_transaction | completed transactions)
@@ -83,7 +88,7 @@ function new_transaction(transaction) {
 }
 ```
 
-Below is the pseudo code for the client to know when a submitted transaction is safely committed
+2. Below is the pseudo code for the client to know when a submitted transaction is safely committed
 
 ```js
 // Client module
@@ -107,7 +112,8 @@ Below is a potential way for lagging replicas to catch up to the block state.
 function sync_replica() {
  validator = some validator in validators
 
- // Make a network call to another validator to get the blocks in the chain after the latest locally committed block
+ // Make a network call to another validator to get the blocks in the
+ // chain after the latest locally committed block
  new_blocks = validator.get_blocks_after(self.get_latest_committed_block())
 
  // Locally apply the new blocks retrieved
@@ -115,8 +121,10 @@ function sync_replica() {
 
  for validator in validators:
 
-   // Ensure that at least 2f+1 validators have the same commit_state_id (i.e an indirect hash of the entire chain).
-   // This ensures that the the final state(commit_state_id) of the entire chain is agreed upon by at least 2f+1   validators, which means it must be actual state
+   // Ensure that at least 2f+1 validators have the same commit_state_id
+   // (i.e an indirect hash of the entire chain).
+   // This ensures that the the final state(commit_state_id) of the
+   // entire chain is agreed upon by at least 2f+1   validators, which means it must be actual state
    assert(commit_state_id == validator.commit_state_id)
 
  commit(new_blocks)
