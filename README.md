@@ -55,9 +55,13 @@ Example failure:
 - We tested our consensus system over multiple successful runs using different number of transactions (1 - 1000) to commit in every run, and with varying block sizes. We found all round times to be in the range of 10 - 750ms, with the median round time to be around 100ms. We have therefore assumed a configurable GST of 500ms, and set the round timeout time to be 10 * GST in the get_round_timer() to avoid unnecessary timeouts, unless induced by our fault injection testing.
 
 ## Bugs and Limitations.
+- QC validation is currently not supported. (The system does not
+currently support validating each voters signature in the QC)
+- Retransmission of requests from the client is not supported
+- Syncing up of lagging replicas is not supported
+- Re-transmission of timeout(and other) lost messages is not supported.
+The system simply times out and moves to the next round (which is still correct behaviour)
 
-### Group activity
- - a list of all known bugs in and limitations of your code.
 
 ## Main files.
 - The starting point of the code to instantiate validators and client and run test cases is present in `wrapper.da`.
@@ -150,6 +154,3 @@ Example failure:
 | Wrapper         |                                 Rakshith Raj |
 | Validator       | Akshay Somayaji, Binoy Chitale, Rakshith Raj |
 
-## Other comments (optional).
- 
-- <anything else you want us to know.>
