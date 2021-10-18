@@ -7,7 +7,7 @@
     - The software versions are included in `requirements.txt` and are as follows.
         - pyDistAlgo==1.0.14
         - PyNaCl==1.4.0
-        - scipy== 1.5.4
+        - scipy==1.5.4
 - The host for these containers are the following laptops
     - Windows 10 running on AMD CPU
     - MacOS running on INTEL i5
@@ -74,49 +74,42 @@ The system simply times out and moves to the next round (which is still correct 
     - ```bash
         cloc <project_folder> --md
        ```
-    | -   cloc | github.com/AlDanial/cloc v 1.81  T=0.01 s (1964.7 files/s, 192127.4 lines/s) |
+    | -   cloc | github.com/AlDanial/cloc v 1.81  T=0.01 s (1746.5 files/s, 251291.5 lines/s) |
     | -------- | ---------------------------------------------------------------------------- |
 
-        | Language     |    files |    blank |  comment |     code |
-        | :----------- | -------: | -------: | -------: | -------: |
-        | Python       |       14 |      226 |      164 |     1251 |
-        | DAL          |        4 |       59 |        1 |      503 |
-        | Markdown     |        2 |       22 |        0 |       79 |
-        | TOML         |        1 |        1 |        1 |       17 |
-        | JSON         |        1 |        0 |        0 |       14 |
-        | Bourne Shell |        1 |        0 |        0 |        6 |
-        | Dockerfile   |        1 |        0 |        0 |        3 |
-        | --------     | -------- | -------- | -------- | -------- |
-        | SUM:         |       24 |      308 |      166 |     1873 |
+        | Language     | files | blank | comment | code |
+        | :----------- | ----: | ----: | ------: | ---: |
+        | Python       |    14 |   437 |     766 | 1245 |
+        | DAL          |     4 |    76 |       0 |  571 |
+        | Markdown     |     4 |   115 |       0 |  489 |
+        | TOML         |     1 |     1 |       1 |   17 |
+        | JSON         |     1 |     0 |       0 |   14 |
+        | Bourne Shell |     1 |     0 |       0 |    6 |
+        | Dockerfile   |     1 |     0 |       0 |    3 |
+        | SUM:         |    26 |   629 |     767 | 2345 |
 - Code size: Algorithm
     - ```bash
-        cloc <project_folder>/modules --md
+        find modules/ ! -name 'fault_injection.da' -type f -exec cloc --md {} +
        ```
-    | - cloc | github.com/AlDanial/cloc v 1.81  T=0.01 s (1438.0 files/s, 165610.4 lines/s) |
+    | - cloc | github.com/AlDanial/cloc v 1.81  T=0.01 s (1158.4 files/s, 219882.7 lines/s) |
     | ------ | ---------------------------------------------------------------------------- |
 
-        | Language |    files |    blank |  comment |     code |
-        | :------- | -------: | -------: | -------: | -------: |
-        | Python   |       11 |      196 |      161 |      932 |
-        | DAL      |        1 |        8 |        0 |       85 |
-        | -------- | -------- | -------- | -------- | -------- |
-        | SUM:     |       12 |      204 |      161 |     1017 |
+        | Language | files | blank | comment | code |
+        | :------- | ----: | ----: | ------: | ---: |
+        | Python   |    11 |   408 |     763 |  917 |
+        | SUM:     |    11 |   408 |     763 |  917 |
 - Code size: Others
     - ```bash
-        cloc <project_folder>/modules --md
+         cloc --md wrapper.da validator.da modules/fault_injection/fault_injection.da client.da modules/objects.py
        ```
-    | - cloc | github.com/AlDanial/cloc v 1.81  T=0.01 s (1303.4 files/s, 168300.0 lines/s) |
-    | ------ | ---------------------------------------------------------------------------- |
+    | - cloc | github.com/AlDanial/cloc v 1.81  T=0.01 s (801.4 files/s, 225358.9 lines/s) |
+    | ------ | --------------------------------------------------------------------------- |
 
-        | Language     |    files |    blank |  comment |     code |
-        | :----------- | -------: | -------: | -------: | -------: |
-        | DAL          |        3 |       51 |        1 |      418 |
-        | Python       |        2 |       84 |      128 |      323 |
-        | TOML         |        1 |        1 |        1 |       17 |
-        | Bourne Shell |        1 |        0 |        0 |        6 |
-        | Dockerfile   |        1 |        0 |        0 |        3 |
-        | --------     | -------- | -------- | -------- | -------- |
-        | SUM:         |        8 |      136 |      130 |      767 |
+        | Language | files | blank | comment | code |
+        | :------- | ----: | ----: | ------: | ---: |
+        | DAL      |     4 |    76 |       0 |  571 |
+        | Python   |     1 |   140 |     304 |  315 |
+        | SUM:     |     5 |   216 |     304 |  886 |
 
 ## Language feature usage
  - These are computed using simple searches in the IDE. Hence they provide only approximations.

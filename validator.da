@@ -81,7 +81,7 @@ class Validator(process):
         )
 
     def run():
-        output("Starting Validator {}, using round timeout value of {}".format(self.validator_id, self.main.pacemaker.get_round_timer()))
+        output("Starting Validator {}, using round timeout value of {}s".format(self.validator_id, self.main.pacemaker.get_round_timer()))
         init_state = True
         while True:
             --receive
