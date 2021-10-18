@@ -57,9 +57,13 @@ Example failure:
 function get_round_timer).
 
 ## Bugs and Limitations.
+- QC validation is currently not supported. (The system does not
+currently support validating each voters signature in the QC)
+- Retransmission of requests from the client is not supported
+- Syncing up of lagging replicas is not supported
+- Re-transmission of timeout(and other) lost messages is not supported.
+The system simply times out and moves to the next round (which is still correct behaviour)
 
-### Group activity
- - a list of all known bugs in and limitations of your code.
 
 ## Main files.
 - The starting point of the code to instantiate validators and client and run test cases is present in `wrapper.da`.
