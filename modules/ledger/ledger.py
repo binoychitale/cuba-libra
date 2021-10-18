@@ -57,10 +57,12 @@ class Ledger:
 
         """
         block_to_commit = block_tree.pending_block_tree.find(block_id)
-        self.ledger.append(
-            CommittedBlock(block_to_commit, self.get_pending_state(block_id))
-        )
+        if block_to_commit.payload:
+            self.ledger.append(
+                CommittedBlock(block_to_commit, self.get_pending_state(block_id))
+            )
         transactions_to_dq = list(trx.id for trx in block_to_commit.payload)
+
         logger.info(
             "Committed transactions {} proposed by Leader {} in round {} in Validator {}".format(
                 list(trx.command for trx in self.ledger[-1].block.payload),
@@ -69,6 +71,7 @@ class Ledger:
                 self.id,
             )
         )
+
         with open("ledger-pid-" + str(self.id), "a") as ledger_file:
             commands = []
             for txn in block_to_commit.payload:

@@ -92,7 +92,7 @@ class Validator(process):
                 and len(self.mempool.queue) > 0
             ):
                 # Send a proposal
-                proposal = self.main.get_next_proposal(None)
+                proposal = self.main.get_next_proposal(None, [])
                 if proposal:
                     init_state = False
                     send(
@@ -127,6 +127,8 @@ class Validator(process):
                 timeout_msg: TimeoutMessage = self.main.pacemaker.local_timeout_round(
                     self.main.safety, self.main.block_tree
                 )
+                if timeout_msg.tmo_info is None:
+                    continue
                 self.process_timeout(timeout_msg)
                 send(
                     (
@@ -146,8 +148,14 @@ class Validator(process):
         )
         if not verified_transaction:
             raise Exception("There is an imposter among us !!")
+        else:
+            output("Client Transaction with id {} verified by validator {} for round {}".format(
+                transaction.id, self.validator_id, self.main.pacemaker.current_round))
 
-        self.mempool.queue[transaction.id] = verified_transaction
+        if not self.mempool.processed_queue.get(transaction.id):
+            self.mempool.queue[transaction.id] = verified_transaction
+        else:
+            output("Transaction with id {} has already been committed into the ledger".format(transaction.id))
 
     # Handle message proposal
     def receive(msg=("Message-Proposal", body), from_=source):
@@ -155,8 +163,7 @@ class Validator(process):
         signed_proposal: SignedMessage = body[1]
         output(
             "Proposal from {} received at {} for round {}".format(
-                proposal.sender_id, self.validator_id, proposal.block.round
-            )
+                proposal.sender_id, self.validator_id, proposal.block.round)
         )
 
         verified_proposal: ProposalMessage = Signatures.verify_signed_payload(
@@ -165,11 +172,8 @@ class Validator(process):
         if not verified_proposal:
             raise Exception("There is an imposter among us !!")
         else:
-            output(
-                "Signed Proposal of {} verified by validator {} for round {}".format(
-                    proposal.sender_id, self.validator_id, proposal.block.round
-                )
-            )
+            output("Signed Proposal of {} verified by validator {} for round {}".format(
+                proposal.sender_id, self.validator_id, proposal.block.round))
 
         vote, trx_to_deque = self.main.process_proposal_msg(verified_proposal)
         trx_client_map = self.main.deque_trx(trx_to_deque)
@@ -178,6 +182,7 @@ class Validator(process):
                 ("Client-Reply", (trx_id, self.validator_id)),
                 to=self.client_map[client_id],
             )
+            self.mempool.processed_queue[trx_id] = True
         if trx_client_map:
             output(
                 "Sent replies to Client and dequeuing from Mempool for round {}: {}".format(
@@ -230,6 +235,7 @@ class Validator(process):
                 ("Client-Reply", (trx_id, self.validator_id)),
                 to=self.client_map[client_id],
             )
+            self.mempool.processed_queue[trx_id] = True
         if trx_client_map:
             output(
                 "Sent replies to Client and dequeuing from Mempool in round {}: {}".format(
@@ -244,6 +250,7 @@ class Validator(process):
                     ("Client-Reply", (trx_id, self.validator_id)),
                     to=self.client_map[client_id],
                 )
+                self.mempool.processed_queue[trx_id] = True
             if trx_client_map:
                 output(
                     "Sent replies to Client and dequeuing from Mempool {}: {}".format(
