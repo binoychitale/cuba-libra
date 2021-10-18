@@ -9,12 +9,26 @@ logger = logging.getLogger(__name__)
 
 class Ledger:
     def __init__(self, id) -> None:
+        """
+
+        Args:
+            id:
+        """
         self.ledger: List[CommittedBlock] = []
         # Map of state-id to Pending block
         self.speculate_states: Dict[str, str] = {}
         self.id = id
 
     def speculate(self, block_id: str, txns: List[Transaction]) -> int:
+        """
+
+        Args:
+            block_id:
+            txns:
+
+        Returns:
+
+        """
         txns = ",".join([trx.command for trx in txns])
         commit_state_id = (
             self.ledger[-1].commit_state_id if len(self.ledger) > 0 else ""
@@ -22,9 +36,26 @@ class Ledger:
         self.speculate_states[block_id] = hash(str(commit_state_id) + txns)
 
     def get_pending_state(self, block_id: str) -> Union[int, None]:
+        """
+
+        Args:
+            block_id:
+
+        Returns:
+
+        """
         return self.speculate_states[block_id]
 
     def commit(self, block_id: str, block_tree: BlockTree):
+        """
+
+        Args:
+            block_id:
+            block_tree:
+
+        Returns:
+
+        """
         block_to_commit = block_tree.pending_block_tree.find(block_id)
         self.ledger.append(
             CommittedBlock(block_to_commit, self.get_pending_state(block_id))
@@ -47,9 +78,22 @@ class Ledger:
         return transactions_to_dq
 
     def get_committed_block(self, block_id: str) -> CommittedBlock:
+        """
+
+        Args:
+            block_id:
+
+        Returns:
+
+        """
         for block in self.ledger:
             if block.block.id == block_id:
                 return block
 
     def display(self):
+        """
+
+        Returns:
+
+        """
         return list(([trx.command for trx in cb.block.payload] for cb in self.ledger))

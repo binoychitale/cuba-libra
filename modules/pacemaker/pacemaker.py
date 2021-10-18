@@ -16,6 +16,13 @@ logger = logging.getLogger(__name__)
 
 class Pacemaker:
     def __init__(self, f: int, id: int, leader_election) -> None:
+        """
+
+        Args:
+            f:
+            id:
+            leader_election:
+        """
         self.current_round: int = 0
         self.last_round_tc: TimeoutCertificate = None
         self.pending_timeouts: Dict[
@@ -27,10 +34,24 @@ class Pacemaker:
         self.id = id
         self.leader_election = leader_election
 
+    """
+    Procedure start timer(new round)
+        stop timer(current round)
+        current round ← new round
+        start local timer for round current round for duration get round timer(current round)
+    """
+
     def start_timer(self, new_round: int) -> None:
         self.timer_start = date_utils.getTimeMillis()
         self.current_round = new_round
         self.round_done = True
+
+    """
+    Procedure local timeout round()
+        save consensus state()
+        timeout info ← Safety.make timeout(current round, Block-Tree.high qc, last round tc)
+        broadcast TimeoutMsghtimeout info, last round tc, Block-Tree.high commit qci
+    """
 
     def local_timeout_round(
         self, safety: Safety, block_tree: BlockTree
@@ -43,6 +64,10 @@ class Pacemaker:
         return TimeoutMessage(
             timeout_info, self.last_round_tc, block_tree.high_qc, self.id
         )
+
+    """
+    Used pseudocode from paper
+    """
 
     def extract_high_qc(self, timeout_msg):
         return timeout_msg.high_qc
@@ -82,6 +107,16 @@ class Pacemaker:
                 tmo_info.round, high_qc_rounds, timeout_signatures
             )  # TODO add implementation here
 
+    """
+    Function advance round tc(tc)
+        if tc = ⊥ ∨ tc.round < current round then
+            return false
+        last round tc ← tc
+        start timer(tc.round + 1)
+        return true
+
+    """
+
     def advance_round_tc(self, tc: TimeoutCertificate) -> bool:
         if tc == None or tc.round < self.current_round:
             return False
@@ -94,6 +129,16 @@ class Pacemaker:
         )
         self.start_timer(tc.round + 1)
         return True
+
+    """
+    Function advance round qc(qc)
+        if qc.vote info.round < current round then
+            return false
+        last round tc ← ⊥
+        start timer(qc.vote info.round + 1)
+        return true
+
+    """
 
     def advance_round_qc(self, qc: QuorumCertificate) -> bool:
         qc_round = qc.vote_info.round if qc else -1

@@ -1,4 +1,3 @@
-
 import logging
 from typing import Dict, List, Tuple, Union
 
@@ -22,6 +21,8 @@ logger = logging.getLogger(__name__)
 
 
 class Main:
+    """Main class"""
+
     def __init__(
         self,
         block_tree: BlockTree,
@@ -32,6 +33,17 @@ class Main:
         mempool: MemPool,
         id: int,
     ) -> None:
+        """
+
+        Args:
+            block_tree:
+            leader_election:
+            pacemaker:
+            safety:
+            ledger:
+            mempool:
+            id:
+        """
         self.block_tree: BlockTree = block_tree
         self.leader_election: LeaderElection = leader_election
         self.pacemaker: Pacemaker = pacemaker
@@ -42,7 +54,22 @@ class Main:
         self.id = id
         self.round_done = False
 
+    """
+    Procedure process certificate qc(qc)
+        Block-Tree.process qc(qc)
+        LeaderElection.update leaders(qc)
+        Pacemaker.advance round(qc.vote info.round)
+    """
+
     def process_certificate_qc(self, qc: QuorumCertificate) -> None:
+        """
+
+        Args:
+            qc:
+
+        Returns:
+
+        """
         trx_to_dq = self.block_tree.process_qc(qc)
 
         # TODO Fix this self.leader_election.update_leaders(qc, self.pacemaker, self.ledger)
@@ -50,9 +77,32 @@ class Main:
 
         return trx_to_dq
 
+    """
+    Procedure process proposal msg(P)
+        process certificate qc(P.block.qc)
+        process certificate qc(P.high commit qc)
+        Pacemaker.advance round tc(P.last round tc)
+        round ← Pacemaker.current round
+        leader ← LeaderElection.get leader(current round)
+        if P.block.round 6= round ∨ P.sender 6= leader ∨ P.block.author 6= leader then
+            return
+        Block-Tree.execute and insert(P) // Adds a new speculative state to the Ledger
+        vote msg ← Safety.make vote(P.block, P.last round tc)
+        if vote msg 6= ⊥ then
+            send vote msg to LeaderElection.get leader(current round + 1)
+    """
+
     def process_proposal_msg(
         self, proposal: ProposalMessage
     ) -> Tuple[Union[None, VoteMsg], List[str]]:
+        """
+
+        Args:
+            proposal:
+
+        Returns:
+
+        """
         trx_to_dq = []
         if proposal.block.qc:
             trx_to_dq = self.process_certificate_qc(proposal.block.qc)
@@ -97,7 +147,23 @@ class Main:
         self.pacemaker.start_timer(self.pacemaker.current_round + 1)
         return (vote_msg, trx_to_dq)
 
+    """
+    Procedure process new round event(last tc)
+        if u = LeaderElection.get leader(Pacemaker.current round) then
+            // Leader code: generate proposal.
+            b ← Block-Tree.generate block( MemPool.get transactions(),Pacemaker.current round )
+            broadcast ProposalMsghb, last tc, Block-Tree.high commit qci
+    """
+
     def process_new_round_event(self, last_tc: TimeoutCertificate) -> ProposalMessage:
+        """
+
+        Args:
+            last_tc:
+
+        Returns:
+
+        """
         if self.id == self.leader_election.get_leader(self.pacemaker.current_round):
             trx_id_list, transactions = self.get_transactions()
             b = self.block_tree.generate_block(
@@ -115,7 +181,26 @@ class Main:
                 trx_ids=trx_id_list,
             )
 
+    """
+    Procedure process timeout msg(M)
+        process certificate qc(M.tmo info.high qc)
+        process certificate qc(M.high commit qc)
+        Pacemaker.advance round tc(M.last round tc)
+        tc ← Pacemaker.process remote timeout(M)
+        if tc != ⊥ then
+            Pacemaker.advance round(tc)
+            process new round event(tc)
+    """
+
     def process_timeout_msg(self, timeout_message: TimeoutMessage) -> ProposalMessage:
+        """
+
+        Args:
+            timeout_message:
+
+        Returns:
+
+        """
         self.process_certificate_qc(timeout_message.tmo_info.high_qc)
         self.process_certificate_qc(timeout_message.high_commit_qc)
         self.pacemaker.advance_round_tc(timeout_message.last_round_tc)
@@ -128,7 +213,23 @@ class Main:
         self.pacemaker.advance_round_tc(timeout_certificate)
         return self.process_new_round_event(timeout_certificate)
 
+    """
+    Procedure process vote msg(M)
+        qc ← Block-Tree.process vote(M)
+        if qc != ⊥ then
+            process certificate qc(qc)
+            process new round event(⊥)
+    """
+
     def process_vote_msg(self, vote_message: VoteMsg) -> None:
+        """
+
+        Args:
+            vote_message:
+
+        Returns:
+
+        """
         process_vote_res = self.block_tree.process_vote(vote_message)
         qc = process_vote_res[0]
         trx_to_dq = process_vote_res[1]
@@ -139,7 +240,23 @@ class Main:
         # self.process_new_round_event(None)  # TODO: Important to figure out why
         return (qc, trx_to_dq)
 
+    """
+    Procedure start event processing(M)
+        if M is a local timeout then Pacemaker.local timeout round()
+        if M is a proposal message then process proposal msg(M)
+        if M is a vote message then process vote msg(M)
+        if M is a timeout message then process timeout message(M)
+    """
+
     def start_event_processing(self, event: Event) -> None:
+        """
+
+        Args:
+            event:
+
+        Returns:
+
+        """
         event_type = event.get_event_type
 
         if event_type == EventType.LOCAL_TIMEOUT:
@@ -155,9 +272,23 @@ class Main:
             pass
 
     def check_if_current_leader(self):
+        """
+
+        Returns:
+
+        """
         return self.leader_election.get_leader(self.pacemaker.current_round) == self.id
 
     def get_next_proposal(self, new_qc, old_tx_ids):
+        """
+
+        Args:
+            new_qc:
+            old_tx_ids:
+
+        Returns:
+
+        """
         logger.info(
             "Leader {} Initiating new Proposal for round {}".format(
                 self.leader_election.get_leader(self.pacemaker.current_round),
@@ -172,6 +303,14 @@ class Main:
         return ProposalMessage(new_block, None, new_qc, None, self.id, trx_id_list)
 
     def get_transactions(self, old_txids=[]):
+        """
+
+        Args:
+            old_txids:
+
+        Returns:
+
+        """
         trx_id_list, transactions = [], []
         block_requests = []
 
@@ -193,6 +332,14 @@ class Main:
         return trx_id_list, transactions
 
     def deque_trx(self, trx_ids: List[str]) -> Dict[str, int]:
+        """
+
+        Args:
+            trx_ids:
+
+        Returns:
+
+        """
         trx_client_map = {}
         for req_id in trx_ids:
             transaction = self.mempool.queue.get(req_id)

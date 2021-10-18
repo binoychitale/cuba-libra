@@ -18,12 +18,31 @@ class LeaderElection:
         exclude_size: Optional[int] = 10,
         reputation_leaders: Optional[Dict[int, Leader]] = None,
     ) -> None:
+        """
+
+        Args:
+            validators:
+            window_size:
+            exclude_size:
+            reputation_leaders:
+        """
         self.validators = validators
         self.window_size = window_size
         self.exclude_size = exclude_size
         self.reputation_leaders = {} if not reputation_leaders else None
 
+    """Used pseudo code from paper."""
+
     def elect_reputation_leader(self, qc: QuorumCertificate, ledger: Ledger) -> Leader:
+        """
+
+        Args:
+            qc:
+            ledger:
+
+        Returns:
+
+        """
         active_validators, last_authors = set(), set()
         current_qc = qc
 
@@ -45,9 +64,28 @@ class LeaderElection:
         random.seed(qc.vote_info.round)
         return random.choice(tuple(active_validators))
 
+    """
+    Procedure update leaders(qc)
+        extended round ← qc.vote info.parent round
+        qc round ← qc.vote info.round
+        current round ← PaceMaker.current round
+        if extended round + 1 = qc round ∧ qc round + 1 = current round then
+            reputation leaders[current round + 1] ← elect reputation leader(qc)
+    """
+
     def update_leaders(
         self, qc: QuorumCertificate, pacemaker: Pacemaker, ledger: Ledger
     ):
+        """
+
+        Args:
+            qc:
+            pacemaker:
+            ledger:
+
+        Returns:
+
+        """
         extended_round = qc.vote_info.parent_round
         qc_round = qc.vote_info.round
         current_round = pacemaker.current_round
@@ -57,7 +95,22 @@ class LeaderElection:
                 qc, ledger
             )
 
-    def get_leader(self, round: int) -> Leader:
+    """
+    Function get leader(round)
+    if (round, leader) ∈ reputation leaders then
+        return leader // Reputation-based leader
+    return validators[floor(round/2) mod |validators|] // Round-robin leader (two rounds per leader)
+    """
+
+    def get_leader(self, round: int) -> int:
+        """
+
+        Args:
+            round:
+
+        Returns:
+
+        """
         leader = self.reputation_leaders.get(round)
         if leader:
             return leader

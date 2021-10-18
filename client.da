@@ -17,6 +17,18 @@ class Client(process):
         validator_map: Dict[int, validator.Validator],
         client_map: Dict[int, Client],
     ):
+        """
+
+        Args:
+            f:
+            client_key_pair:
+            client_pubkey_map:
+            validator_map:
+            client_map:
+
+        Returns:
+
+        """
         # do any additional setup here
         self.f = f
         self.n = len(validator_map)
