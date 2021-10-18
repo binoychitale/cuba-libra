@@ -303,6 +303,7 @@ class Safety:
         """
         qc_round = high_qc.vote_info.round if high_qc else -1
 
+        # Verify TC takes care of this - hence it always returns True
         if not (
             Certificate.is_valid_signatures(high_qc, last_tc)
             and self._is_safe_to_timeout(round, qc_round, last_tc)

@@ -381,6 +381,24 @@ class ProposalMessage:
         return self, signed_payload
 
 
+class Certificate:
+    def __init__(self) -> None:
+        pass
+
+    @staticmethod
+    def is_valid_signatures(block: Block, certificate: TimeoutCertificate) -> bool:
+        """
+
+        Args:
+            block:
+            certificate:
+
+        Returns:
+
+        """
+        return True
+
+
 class Signatures:
 
     encoder = HexEncoder
