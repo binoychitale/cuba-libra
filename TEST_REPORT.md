@@ -65,6 +65,8 @@ Ledger state: [['hello2', 'hello5', 'hello4', 'hello0'], ['hello9', 'hello7', 'h
 ```
 
 2. __Message Delay__
+Here we simulate message delay from 1/4 validators.
+
 The system should be able to successfully time-out the round
 elect a new leader (same as in the old case).
 In addition, we also need to reject messages that arrive out of turn
@@ -106,7 +108,57 @@ Ledger state: [['hello0', 'hello2', 'hello4', 'hello7'], ['hello1', 'hello6', 'h
 Ledger state: [['hello0', 'hello2', 'hello4', 'hello7'], ['hello1', 'hello6', 'hello3', 'hello5'], ['hello8', 'hello9']]
 ```
 
-3. __Chained falure: Validator proposal loss(round 1) + follower vote loss (ronud 2)__
+3. __Validator vote delay__
+Here we simulate vote delay from 1/4 validators.
+
+The system should be able to successfully time-out the round
+elect a new leader .
+
+If we fail to secure enough votes to commit, we need to advance the round
+and elect a new leader
+
+
+#### Fault configuration:
+```python
+FailureConfig(
+    failures=[
+        Failure(
+            src="_",
+            dest="leader",
+            msg_type=MsgType.Vote,
+            round=1,
+            prob=1,
+            fail_type=FailType.Delay,
+            val=7,
+            attr=None,
+        )
+    ],
+    seed=0,
+),
+```
+
+#### Output:
+We end up with a consistent final ledger state:
+```
+01:16:33,110 - modules.fault_injection.fault_injection.ValidatorFI - OUTPUT - Received exit in Validator: 3
+Ledger state: [['hello0', 'hello1', 'hello6', 'hello7'], ['hello3', 'hello5', 'hello9', 'hello8'], ['hello4', 'hello2']]
+Rounds: [1, 2, 3]
+
+01:16:33,76 - modules.fault_injection.fault_injection.ValidatorFI - OUTPUT - Received exit in Validator: 1
+Ledger state: [['hello0', 'hello1', 'hello6', 'hello7'], ['hello3', 'hello5', 'hello9', 'hello8'], ['hello4', 'hello2']]
+Rounds: [1, 2, 3]
+
+01:16:33,82 - modules.fault_injection.fault_injection.ValidatorFI - OUTPUT - Received exit in Validator: 0
+Ledger state: [['hello0', 'hello1', 'hello6', 'hello7'], ['hello3', 'hello5', 'hello9', 'hello8'], ['hello4', 'hello2']]
+Rounds: [1, 2, 3]
+
+01:02:22,40 - modules.fault_injection.fault_injection.ValidatorFI - OUTPUT - Received exit in Validator: 3
+Ledger state: [['hello2', 'hello0', 'hello6', 'hello5'], ['hello1', 'hello9', 'hello8', 'hello7'], ['hello4', 'hello3']]
+Rounds: [3, 4, 5]
+
+```
+
+4. __Chained falure: Validator proposal loss(round 1) + follower vote loss (ronud 2)__
 The system should be able to successfully handle multiple sequential failures.
 
 In order to test this we chain 2 failures together. We induce a proposal message loss
@@ -165,7 +217,7 @@ Ledger state: [['hello2', 'hello0', 'hello6', 'hello5'], ['hello1', 'hello9', 'h
 Rounds: [3, 4, 5]
 ```
 
-4. __Invalid round number__
+5. __Invalid round number__
 The system should be able to handle Byzantine faults. In this case, we
 need to be able to handle an incorrect round number being advertised by one
 of the validators.
