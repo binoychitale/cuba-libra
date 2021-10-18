@@ -124,15 +124,22 @@ class Validator(process):
         )
         if not verified_transaction:
             raise Exception("There is an imposter among us !!")
-
-        self.mempool.queue[transaction.id] = verified_transaction
+        else:
+            output("Client Transaction with id {} verified by validator {} for round {}".format(
+                transaction.id, self.validator_id, self.main.pacemaker.current_round))
+        
+        if not self.mempool.processed_queue.get(transaction.id):
+            self.mempool.queue[transaction.id] = verified_transaction
+        else:
+            output("Transaction with id {} has already been committed into the ledger".format(transaction.id))
 
     # Handle message proposal
     def receive(msg=("Message-Proposal", body), from_=source):
         proposal: ProposalMessage = body[0]
         signed_proposal: SignedMessage = body[1]
         output(
-            "Proposal from {} received at {} for round {}".format(proposal.sender_id, self.validator_id, proposal.block.round)
+            "Proposal from {} received at {} for round {}".format(
+                proposal.sender_id, self.validator_id, proposal.block.round)
         )
 
         verified_proposal: ProposalMessage = Signatures.verify_signed_payload(
@@ -141,7 +148,8 @@ class Validator(process):
         if not verified_proposal:
             raise Exception("There is an imposter among us !!")
         else:
-            output("Signed Proposal of {} verified by validator {} for round {}".format(proposal.sender_id, self.validator_id, proposal.block.round))
+            output("Signed Proposal of {} verified by validator {} for round {}".format(
+                proposal.sender_id, self.validator_id, proposal.block.round))
 
         vote, trx_to_deque = self.main.process_proposal_msg(verified_proposal)
         trx_client_map = self.main.deque_trx(trx_to_deque)
@@ -150,6 +158,7 @@ class Validator(process):
                 ("Client-Reply", (trx_id, self.validator_id)),
                 to=self.client_map[client_id],
             )
+            self.mempool.processed_queue[trx_id] = True
         if trx_client_map:
             output("Sent replies to Client and dequeuing from Mempool for round {}: {}".format(
                 self.main.pacemaker.current_round, trx_to_deque))
@@ -195,6 +204,7 @@ class Validator(process):
                 ("Client-Reply", (trx_id, self.validator_id)),
                 to=self.client_map[client_id],
             )
+            self.mempool.processed_queue[trx_id] = True
         if trx_client_map:
             output("Sent replies to Client and dequeuing from Mempool in round {}: {}".format(
                 self.main.pacemaker.current_round, deque_txns))
@@ -206,6 +216,7 @@ class Validator(process):
                     ("Client-Reply", (trx_id, self.validator_id)),
                     to=self.client_map[client_id],
                 )
+                self.mempool.processed_queue[trx_id] = True
             if trx_client_map:
                 output("Sent replies to Client and dequeuing from Mempool {}: {}".format(
                     self.main.pacemaker.current_round, trx_ids))

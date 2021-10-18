@@ -26,9 +26,10 @@ class Ledger:
 
     def commit(self, block_id: str, block_tree: BlockTree):
         block_to_commit = block_tree.pending_block_tree.find(block_id)
-        self.ledger.append(
-            CommittedBlock(block_to_commit, self.get_pending_state(block_id))
-        )
+        if block_to_commit.payload:
+            self.ledger.append(
+                CommittedBlock(block_to_commit, self.get_pending_state(block_id))
+            )
         transactions_to_dq = list(trx.id for trx in block_to_commit.payload)
 
         logger.info(
