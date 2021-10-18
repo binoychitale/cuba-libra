@@ -538,6 +538,7 @@ class TestConfig:
         client_key_pairs: Tuple[SigningKey, VerifyKey],
         client_pubkey_map: Dict[int, VerifyKey],
         num_clients: int,
+        round_gst: float,
     ) -> None:
         """
 
@@ -555,6 +556,7 @@ class TestConfig:
         self.client_key_pairs = client_key_pairs
         self.client_pubkey_map = client_pubkey_map
         self.num_clients = num_clients
+        self.round_gst = round_gst
 
 
 class MsgType(Enum):
@@ -732,6 +734,7 @@ def generate_test_configs() -> List[TestConfig]:
     """
     n_validators = [4, 10]
     n_clients = [10, 2]
+    round_gst = [0.5, 0.5]
     tests = []
 
     for i, n in enumerate(n_validators):
@@ -753,6 +756,7 @@ def generate_test_configs() -> List[TestConfig]:
                 "client_key_pairs": client_key_pairs,
                 "client_pubkey_map": client_pubkey_map,
                 "num_clients": n_clients[i],
+                "round_gst": round_gst[i],
             }
         )
 

@@ -51,10 +51,8 @@ Example failure:
     )
 }
 ```
-## Timeouts. 
-### Akshay fill this
-- discuss your choice of timeout formulas and timeout values for clients and servers (e.g., in
-function get_round_timer).
+## Timeouts.
+- We tested our consensus system over multiple successful runs using different number of transactions (1 - 1000) to commit in every run, and with varying block sizes. We found all round times to be in the range of 10 - 750ms, with the median round time to be around 100ms. We have therefore assumed a configurable GST of 500ms, and set the round timeout time to be 10 * GST in the get_round_timer() to avoid unnecessary timeouts, unless induced by our fault injection testing.
 
 ## Bugs and Limitations.
 
@@ -72,49 +70,49 @@ function get_round_timer).
     - ```bash
         cloc <project_folder> --md
        ```
-    -   cloc|github.com/AlDanial/cloc v 1.81  T=0.01 s (1964.7 files/s, 192127.4 lines/s)
-        --- | ---
+    | -   cloc | github.com/AlDanial/cloc v 1.81  T=0.01 s (1964.7 files/s, 192127.4 lines/s) |
+    | -------- | ---------------------------------------------------------------------------- |
 
-        Language|files|blank|comment|code
-        :-------|-------:|-------:|-------:|-------:
-        Python|14|226|164|1251
-        DAL|4|59|1|503
-        Markdown|2|22|0|79
-        TOML|1|1|1|17
-        JSON|1|0|0|14
-        Bourne Shell|1|0|0|6
-        Dockerfile|1|0|0|3
-        --------|--------|--------|--------|--------
-        SUM:|24|308|166|1873
+        | Language     |    files |    blank |  comment |     code |
+        | :----------- | -------: | -------: | -------: | -------: |
+        | Python       |       14 |      226 |      164 |     1251 |
+        | DAL          |        4 |       59 |        1 |      503 |
+        | Markdown     |        2 |       22 |        0 |       79 |
+        | TOML         |        1 |        1 |        1 |       17 |
+        | JSON         |        1 |        0 |        0 |       14 |
+        | Bourne Shell |        1 |        0 |        0 |        6 |
+        | Dockerfile   |        1 |        0 |        0 |        3 |
+        | --------     | -------- | -------- | -------- | -------- |
+        | SUM:         |       24 |      308 |      166 |     1873 |
 - Code size: Algorithm
     - ```bash
         cloc <project_folder>/modules --md
        ```
-    - cloc|github.com/AlDanial/cloc v 1.81  T=0.01 s (1438.0 files/s, 165610.4 lines/s)
-        --- | ---
+    | - cloc | github.com/AlDanial/cloc v 1.81  T=0.01 s (1438.0 files/s, 165610.4 lines/s) |
+    | ------ | ---------------------------------------------------------------------------- |
 
-        Language|files|blank|comment|code
-        :-------|-------:|-------:|-------:|-------:
-        Python|11|196|161|932
-        DAL|1|8|0|85
-        --------|--------|--------|--------|--------
-        SUM:|12|204|161|1017
+        | Language |    files |    blank |  comment |     code |
+        | :------- | -------: | -------: | -------: | -------: |
+        | Python   |       11 |      196 |      161 |      932 |
+        | DAL      |        1 |        8 |        0 |       85 |
+        | -------- | -------- | -------- | -------- | -------- |
+        | SUM:     |       12 |      204 |      161 |     1017 |
 - Code size: Others
     - ```bash
         cloc <project_folder>/modules --md
        ```
-    - cloc|github.com/AlDanial/cloc v 1.81  T=0.01 s (1303.4 files/s, 168300.0 lines/s)
-        --- | ---
+    | - cloc | github.com/AlDanial/cloc v 1.81  T=0.01 s (1303.4 files/s, 168300.0 lines/s) |
+    | ------ | ---------------------------------------------------------------------------- |
 
-        Language|files|blank|comment|code
-        :-------|-------:|-------:|-------:|-------:
-        DAL|3|51|1|418
-        Python|2|84|128|323
-        TOML|1|1|1|17
-        Bourne Shell|1|0|0|6
-        Dockerfile|1|0|0|3
-        --------|--------|--------|--------|--------
-        SUM:|8|136|130|767
+        | Language     |    files |    blank |  comment |     code |
+        | :----------- | -------: | -------: | -------: | -------: |
+        | DAL          |        3 |       51 |        1 |      418 |
+        | Python       |        2 |       84 |      128 |      323 |
+        | TOML         |        1 |        1 |        1 |       17 |
+        | Bourne Shell |        1 |        0 |        0 |        6 |
+        | Dockerfile   |        1 |        0 |        0 |        3 |
+        | --------     | -------- | -------- | -------- | -------- |
+        | SUM:         |        8 |      136 |      130 |      767 |
 
 ## Language feature usage
  - These are computed using simple searches in the IDE. Hence they provide only approximations.
@@ -130,27 +128,27 @@ function get_round_timer).
     - Receive handlers: 8
 
 ## Contributors
-- Akshay Somaiyaji(SBU ID: 113322316)
+- Akshay Somayaji(SBU ID: 113322316)
 - Rakshith Raj(SBU ID: 113167737)
 - Binoy Chitale(SBU ID: 113140721)
 
 ## Contributions.
 
-|   Module              |   Authors     
-|   :-------            |   -------:    
-|   Mempool             |   Akshay Somayaji
-|   Leader Election     |   Akshay Somayaji
-|   Client              |   Akshay Somayaji
-|   Dockerfile          |   Akshay Somayaji
-|   Block Tree          |   Binoy Chitale           
-|   Ledger              |   Binoy Chitale
-|   Pacemaker           |   Binoy Chiltale
-|   Fault Injection     |   Binoy Chitale           
-|   Main                |   Rakshith Raj
-|   Safety              |   Rakshith Raj
-|   Objects             |   Rakshith Raj 
-|   Wrapper             |   Rakshith Raj
-|   Validator           |   Akshay Somayaji, Binoy Chiltale, Rakshith Raj
+| Module          |                                      Authors |
+| :-------------- | -------------------------------------------: |
+| Mempool         |                              Akshay Somayaji |
+| Leader Election |                              Akshay Somayaji |
+| Client          |                              Akshay Somayaji |
+| Dockerfile      |                              Akshay Somayaji |
+| Block Tree      |                                Binoy Chitale |
+| Ledger          |                                Binoy Chitale |
+| Pacemaker       |                                Binoy Chitale |
+| Fault Injection |                                Binoy Chitale |
+| Main            |                                 Rakshith Raj |
+| Safety          |                                 Rakshith Raj |
+| Objects         |                                 Rakshith Raj |
+| Wrapper         |                                 Rakshith Raj |
+| Validator       | Akshay Somayaji, Binoy Chitale, Rakshith Raj |
 
 ## Other comments (optional).
  

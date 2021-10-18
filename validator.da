@@ -38,6 +38,7 @@ class Validator(process):
         client_map: Dict[int, client.Client],
         client_keypair_map: Dict[int, Tuple[SigningKey, VerifyKey]],
         parent,
+        gst: float,
     ):
         """
 
@@ -62,7 +63,7 @@ class Validator(process):
         ledger = Ledger(id)
         block_tree = BlockTree(ledger, f, id)
         leader_election = LeaderElection(len(public_key_map.keys()))
-        pacemaker = Pacemaker(f, id, leader_election)
+        pacemaker = Pacemaker(f, id, leader_election, gst)
         self.mempool = MemPool()
         self.main = Main(
             block_tree, leader_election, pacemaker, safety, ledger, mempool, id
@@ -80,11 +81,10 @@ class Validator(process):
         )
 
     def run():
-        output("Starting Validator {}...".format(self.validator_id))
+        output("Starting Validator {}, using round timeout value of {}".format(self.validator_id, self.main.pacemaker.get_round_timer()))
         init_state = True
         while True:
             --receive
-            # Check if 5 seconds have elapsed since timer was set
             if (
                 init_state
                 and self.main.check_if_current_leader()
@@ -117,7 +117,8 @@ class Validator(process):
                     break
                 self.main.round_done = False
 
-            elif timeout(5):
+            # Check if 'get_round_timer' seconds have elapsed since timer was set
+            elif timeout(self.main.pacemaker.get_round_timer()):
                 output(
                     "Local timeout at {} for round {}".format(
                         self.validator_id, self.main.pacemaker.current_round
