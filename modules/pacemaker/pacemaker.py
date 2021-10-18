@@ -15,13 +15,14 @@ logger = logging.getLogger(__name__)
 
 
 class Pacemaker:
-    def __init__(self, f: int, id: int, leader_election) -> None:
+    def __init__(self, f: int, id: int, leader_election, gst: float) -> None:
         """
 
         Args:
             f:
             id:
             leader_election:
+            gst:
         """
         self.current_round: int = 0
         self.last_round_tc: TimeoutCertificate = None
@@ -32,7 +33,16 @@ class Pacemaker:
         self.f: int = f
         self.round_done = False
         self.id = id
+        self.gst = gst
         self.leader_election = leader_election
+
+    """
+    Function get round timer(r)
+        return round timer formula (We use 10 * GST value that we determined from multiple iterations of DA runs)
+    """
+
+    def get_round_timer(self):
+        return 10 * self.gst
 
     """
     Procedure start timer(new round)

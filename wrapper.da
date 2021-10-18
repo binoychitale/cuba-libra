@@ -41,6 +41,7 @@ class RunDiemBFT(process):
                     client_keypair_map,
                     failure_config,
                     self,
+                    test_config.round_gst,
                 ),
             )
         for idx, client in enumerate(clients):

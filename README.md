@@ -7,7 +7,7 @@
     - The software versions are included in `requirements.txt` and are as follows.
         - pyDistAlgo==1.0.14
         - PyNaCl==1.4.0
-        - scipy== 1.5.4
+        - scipy==1.5.4
 - The host for these containers are the following laptops
     - Windows 10 running on AMD CPU
     - MacOS running on INTEL i5
@@ -51,10 +51,8 @@ Example failure:
     )
 }
 ```
-## Timeouts. 
-### Akshay fill this
-- discuss your choice of timeout formulas and timeout values for clients and servers (e.g., in
-function get_round_timer).
+## Timeouts.
+- We tested our consensus system over multiple successful runs using different number of transactions (1 - 1000) to commit in every run, and with varying block sizes. We found all round times to be in the range of 10 - 750ms, with the median round time to be around 100ms. We have therefore assumed a configurable GST of 500ms, and set the round timeout time to be 10 * GST in the get_round_timer() to avoid unnecessary timeouts, unless induced by our fault injection testing.
 
 ## Bugs and Limitations.
 - QC validation is currently not supported. (The system does not
@@ -76,42 +74,42 @@ The system simply times out and moves to the next round (which is still correct 
     - ```bash
         cloc <project_folder> --md
        ```
-    -   cloc|github.com/AlDanial/cloc v 1.81  T=0.01 s (1746.5 files/s, 251291.5 lines/s)
-        --- | ---
+    | -   cloc | github.com/AlDanial/cloc v 1.81  T=0.01 s (1746.5 files/s, 251291.5 lines/s) |
+    | -------- | ---------------------------------------------------------------------------- |
 
-        Language|files|blank|comment|code
-        :-------|-------:|-------:|-------:|-------:
-        Python|14|437|766|1245
-        DAL|4|76|0|571
-        Markdown|4|115|0|489
-        TOML|1|1|1|17
-        JSON|1|0|0|14
-        Bourne Shell|1|0|0|6
-        Dockerfile|1|0|0|3
-        SUM:|26|629|767|2345
+        | Language     | files | blank | comment | code |
+        | :----------- | ----: | ----: | ------: | ---: |
+        | Python       |    14 |   437 |     766 | 1245 |
+        | DAL          |     4 |    76 |       0 |  571 |
+        | Markdown     |     4 |   115 |       0 |  489 |
+        | TOML         |     1 |     1 |       1 |   17 |
+        | JSON         |     1 |     0 |       0 |   14 |
+        | Bourne Shell |     1 |     0 |       0 |    6 |
+        | Dockerfile   |     1 |     0 |       0 |    3 |
+        | SUM:         |    26 |   629 |     767 | 2345 |
 - Code size: Algorithm
     - ```bash
         find modules/ ! -name 'fault_injection.da' -type f -exec cloc --md {} +
        ```
-    - cloc|github.com/AlDanial/cloc v 1.81  T=0.01 s (1158.4 files/s, 219882.7 lines/s)
-        --- | ---
+    | - cloc | github.com/AlDanial/cloc v 1.81  T=0.01 s (1158.4 files/s, 219882.7 lines/s) |
+    | ------ | ---------------------------------------------------------------------------- |
 
-        Language|files|blank|comment|code
-        :-------|-------:|-------:|-------:|-------:
-        Python|11|408|763|917
-        SUM:|11|408|763|917
+        | Language | files | blank | comment | code |
+        | :------- | ----: | ----: | ------: | ---: |
+        | Python   |    11 |   408 |     763 |  917 |
+        | SUM:     |    11 |   408 |     763 |  917 |
 - Code size: Others
     - ```bash
          cloc --md wrapper.da validator.da modules/fault_injection/fault_injection.da client.da modules/objects.py
        ```
-    - cloc|github.com/AlDanial/cloc v 1.81  T=0.01 s (801.4 files/s, 225358.9 lines/s)
-        --- | ---
+    | - cloc | github.com/AlDanial/cloc v 1.81  T=0.01 s (801.4 files/s, 225358.9 lines/s) |
+    | ------ | --------------------------------------------------------------------------- |
 
-        Language|files|blank|comment|code
-        :-------|-------:|-------:|-------:|-------:
-        DAL|4|76|0|571
-        Python|1|140|304|315
-        SUM:|5|216|304|886
+        | Language | files | blank | comment | code |
+        | :------- | ----: | ----: | ------: | ---: |
+        | DAL      |     4 |    76 |       0 |  571 |
+        | Python   |     1 |   140 |     304 |  315 |
+        | SUM:     |     5 |   216 |     304 |  886 |
 
 ## Language feature usage
  - These are computed using simple searches in the IDE. Hence they provide only approximations.
@@ -127,25 +125,25 @@ The system simply times out and moves to the next round (which is still correct 
     - Receive handlers: 8
 
 ## Contributors
-- Akshay Somaiyaji(SBU ID: 113322316)
+- Akshay Somayaji(SBU ID: 113322316)
 - Rakshith Raj(SBU ID: 113167737)
 - Binoy Chitale(SBU ID: 113140721)
 
 ## Contributions.
 
-|   Module              |   Authors     
-|   :-------            |   -------:    
-|   Mempool             |   Akshay Somayaji
-|   Leader Election     |   Akshay Somayaji
-|   Client              |   Akshay Somayaji
-|   Dockerfile          |   Akshay Somayaji
-|   Block Tree          |   Binoy Chitale           
-|   Ledger              |   Binoy Chitale
-|   Pacemaker           |   Binoy Chiltale
-|   Fault Injection     |   Binoy Chitale           
-|   Main                |   Rakshith Raj
-|   Safety              |   Rakshith Raj
-|   Objects             |   Rakshith Raj 
-|   Wrapper             |   Rakshith Raj
-|   Validator           |   Akshay Somayaji, Binoy Chiltale, Rakshith Raj
+| Module          |                                      Authors |
+| :-------------- | -------------------------------------------: |
+| Mempool         |                              Akshay Somayaji |
+| Leader Election |                              Akshay Somayaji |
+| Client          |                              Akshay Somayaji |
+| Dockerfile      |                              Akshay Somayaji |
+| Block Tree      |                                Binoy Chitale |
+| Ledger          |                                Binoy Chitale |
+| Pacemaker       |                                Binoy Chitale |
+| Fault Injection |                                Binoy Chitale |
+| Main            |                                 Rakshith Raj |
+| Safety          |                                 Rakshith Raj |
+| Objects         |                                 Rakshith Raj |
+| Wrapper         |                                 Rakshith Raj |
+| Validator       | Akshay Somayaji, Binoy Chitale, Rakshith Raj |
 

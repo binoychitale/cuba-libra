@@ -538,6 +538,7 @@ class TestConfig:
         client_key_pairs: Tuple[SigningKey, VerifyKey],
         client_pubkey_map: Dict[int, VerifyKey],
         num_clients: int,
+        round_gst: float,
     ) -> None:
         """
 
@@ -555,6 +556,7 @@ class TestConfig:
         self.client_key_pairs = client_key_pairs
         self.client_pubkey_map = client_pubkey_map
         self.num_clients = num_clients
+        self.round_gst = round_gst
 
 
 class MsgType(Enum):
@@ -579,95 +581,95 @@ Failure = namedtuple(
 
 
 failure_cases = [
-    # {
-    #     "msg": "No Failures: Successful run",
-    #     "rules": FailureConfig(
-    #         failures=[],
-    #         seed=0,
-    #     ),
-    # },
-    # {
-    #     "msg": "Minority fail: Message Loss",
-    #     "rules": FailureConfig(
-    #         failures=[
-    #             Failure(
-    #                 src=0,
-    #                 dest="_",
-    #                 msg_type=MsgType.Wildcard,
-    #                 round=1,
-    #                 prob=1,
-    #                 fail_type=FailType.MsgLoss,
-    #                 val=None,
-    #                 attr=None,
-    #             )
-    #         ],
-    #         seed=0,
-    #     ),
-    # },
-    # {
-    #     "msg": "Minority fail: Message Delay",
-    #     "rules": FailureConfig(
-    #         failures=[
-    #             Failure(
-    #                 src=0,
-    #                 dest="_",
-    #                 msg_type=MsgType.Wildcard,
-    #                 round=1,
-    #                 prob=1,
-    #                 fail_type=FailType.Delay,
-    #                 val=10,
-    #                 attr=None,
-    #             )
-    #         ],
-    #         seed=0,
-    #     ),
-    # },
-    # {
-    #     "msg": "Majority fail: Validator vote delay",
-    #     "rules": FailureConfig(
-    #         failures=[
-    #             Failure(
-    #                 src="_",
-    #                 dest="leader",
-    #                 msg_type=MsgType.Vote,
-    #                 round=1,
-    #                 prob=1,
-    #                 fail_type=FailType.Delay,
-    #                 val=7,
-    #                 attr=None,
-    #             )
-    #         ],
-    #         seed=0,
-    #     ),
-    # },
-    # {
-    #     "msg": "Chained falure: Validator proposal loss(round 1) + follower vote loss (ronud 2)",
-    #     "rules": FailureConfig(
-    #         failures=[
-    #             Failure(
-    #                 src="leader",
-    #                 dest="_",
-    #                 msg_type=MsgType.Proposal,
-    #                 round=1,
-    #                 prob=1,
-    #                 fail_type=FailType.Delay,
-    #                 val=None,
-    #                 attr=None,
-    #             ),
-    #             Failure(
-    #                 src="_",
-    #                 dest="leader",
-    #                 msg_type=MsgType.Vote,
-    #                 round=2,
-    #                 prob=1,
-    #                 fail_type=FailType.Delay,
-    #                 val=None,
-    #                 attr=None,
-    #             ),
-    #         ],
-    #         seed=0,
-    #     ),
-    # },
+    {
+        "msg": "No Failures: Successful run",
+        "rules": FailureConfig(
+            failures=[],
+            seed=0,
+        ),
+    },
+    {
+        "msg": "Minority fail: Message Loss",
+        "rules": FailureConfig(
+            failures=[
+                Failure(
+                    src=0,
+                    dest="_",
+                    msg_type=MsgType.Wildcard,
+                    round=1,
+                    prob=1,
+                    fail_type=FailType.MsgLoss,
+                    val=None,
+                    attr=None,
+                )
+            ],
+            seed=0,
+        ),
+    },
+    {
+        "msg": "Minority fail: Message Delay",
+        "rules": FailureConfig(
+            failures=[
+                Failure(
+                    src=0,
+                    dest="_",
+                    msg_type=MsgType.Wildcard,
+                    round=1,
+                    prob=1,
+                    fail_type=FailType.Delay,
+                    val=10,
+                    attr=None,
+                )
+            ],
+            seed=0,
+        ),
+    },
+    {
+        "msg": "Majority fail: Validator vote delay",
+        "rules": FailureConfig(
+            failures=[
+                Failure(
+                    src="_",
+                    dest="leader",
+                    msg_type=MsgType.Vote,
+                    round=1,
+                    prob=1,
+                    fail_type=FailType.Delay,
+                    val=7,
+                    attr=None,
+                )
+            ],
+            seed=0,
+        ),
+    },
+    {
+        "msg": "Chained falure: Validator proposal loss(round 1) + follower vote loss (ronud 2)",
+        "rules": FailureConfig(
+            failures=[
+                Failure(
+                    src="leader",
+                    dest="_",
+                    msg_type=MsgType.Proposal,
+                    round=1,
+                    prob=1,
+                    fail_type=FailType.Delay,
+                    val=None,
+                    attr=None,
+                ),
+                Failure(
+                    src="_",
+                    dest="leader",
+                    msg_type=MsgType.Vote,
+                    round=2,
+                    prob=1,
+                    fail_type=FailType.Delay,
+                    val=None,
+                    attr=None,
+                ),
+            ],
+            seed=0,
+        ),
+    },
     {
         "msg": "Invalid round number",
         "rules": FailureConfig(
@@ -732,6 +734,7 @@ def generate_test_configs() -> List[TestConfig]:
     """
     n_validators = [4, 10]
     n_clients = [10, 2]
+    round_gst = [0.5, 0.5]
     tests = []
 
     for i, n in enumerate(n_validators):
@@ -753,6 +756,7 @@ def generate_test_configs() -> List[TestConfig]:
                 "client_key_pairs": client_key_pairs,
                 "client_pubkey_map": client_pubkey_map,
                 "num_clients": n_clients[i],
+                "round_gst": round_gst[i],
             }
         )
 
