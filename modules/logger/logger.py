@@ -3,6 +3,15 @@ import os
 
 
 def init_logging(dir_path, file_name):
+    """
+
+    Args:
+        dir_path:
+        file_name:
+
+    Returns:
+
+    """
     log_dir = os.path.join(dir_path, "logs")
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)

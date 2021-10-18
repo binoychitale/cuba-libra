@@ -13,6 +13,13 @@ class TimeoutCertificate:
     def __init__(
         self, round: int, tmo_high_qc_rounds: List[int], tmo_signatures: List[Any]
     ) -> None:
+        """
+
+        Args:
+            round:
+            tmo_high_qc_rounds:
+            tmo_signatures:
+        """
         self.round = round
         self.tmo_high_qc_rounds = tmo_high_qc_rounds
         self.tmo_signatures = tmo_signatures
@@ -20,15 +27,31 @@ class TimeoutCertificate:
 
 class LedgerCommitInfo:
     def __init__(self, commit_state_id: int, vote_info_hash: str) -> None:
+        """
+
+        Args:
+            commit_state_id:
+            vote_info_hash:
+        """
         self.commit_state_id = (
             commit_state_id  # ⊥ if no commit happens when this vote is aggregated to QC
         )
         self.vote_info_hash = vote_info_hash  # Hash of VoteMsg.vote info
 
     def fields(self):
+        """
+
+        Returns:
+
+        """
         return (self.commit_state_id, self.vote_info_hash)
 
     def __repr__(self):
+        """
+
+        Returns:
+
+        """
         from pprint import pformat
 
         return pformat(vars(self), indent=4, width=1)
@@ -43,6 +66,15 @@ class VoteInfo:
         parent_round: int,
         exec_state_id: int,
     ) -> None:
+        """
+
+        Args:
+            id:
+            round:
+            parent_id:
+            parent_round:
+            exec_state_id:
+        """
         self.id = id
         self.round = round
         self.parent_id = parent_id
@@ -50,6 +82,11 @@ class VoteInfo:
         self.exec_state_id = exec_state_id
 
     def fields(self):
+        """
+
+        Returns:
+
+        """
         return (
             self.id,
             self.round,
@@ -59,6 +96,11 @@ class VoteInfo:
         )
 
     def __repr__(self):
+        """
+
+        Returns:
+
+        """
         from pprint import pformat
 
         return pformat(vars(self), indent=4, width=1)
@@ -73,6 +115,15 @@ class QuorumCertificate:
         author: int,  # u - The validator that produced the q,
         author_signature: Any,  # ← signu(signatures),
     ) -> None:
+        """
+
+        Args:
+            vote_info:
+            ledger_commit_info:
+            signatures:
+            author:
+            author_signature:
+        """
         self.vote_info = vote_info
         self.ledger_commit_info = ledger_commit_info
         self.signatures = signatures
@@ -80,6 +131,11 @@ class QuorumCertificate:
         self.author_signature = author_signature
 
     def __repr__(self):
+        """
+
+        Returns:
+
+        """
         from pprint import pformat
 
         return pformat(vars(self), indent=4, width=1)
@@ -87,12 +143,27 @@ class QuorumCertificate:
 
 class Transaction:
     def __init__(self, command: str, id: str, client_id: int):
+        """
+
+        Args:
+            command:
+            id:
+            client_id:
+        """
         self.command = command
         self.id = id
         self.retry_count = 0
         self.client_id = client_id
 
     def create_signed_payload(self, signing_key: SigningKey) -> Tuple:
+        """
+
+        Args:
+            signing_key:
+
+        Returns:
+
+        """
         signed_payload = Signatures.pickle_and_sign_payload(self, signing_key)
         return (self, signed_payload)
 
@@ -106,7 +177,15 @@ class Block:
         qc: QuorumCertificate,  # QC for parent block
         id: str,  # A unique digest of author, round, payload, qc.vote info.id and qc.signatures
     ) -> None:
+        """
 
+        Args:
+            author:
+            round:
+            payload:
+            qc:
+            id:
+        """
         self.author = author
         self.round = round
         self.payload = payload
@@ -114,6 +193,11 @@ class Block:
         self.id = id
 
     def __repr__(self):
+        """
+
+        Returns:
+
+        """
         from pprint import pformat
 
         return pformat(vars(self), indent=4, width=1)
@@ -125,6 +209,12 @@ class CommittedBlock:
         block: Block,
         commit_state_id: str,  # A unique digest of author, round, payload, qc.vote info.id and qc.signatures
     ) -> None:
+        """
+
+        Args:
+            block:
+            commit_state_id:
+        """
         self.block = block
         self.commit_state_id = commit_state_id
 
@@ -137,8 +227,14 @@ class TimeoutInfo:
         sender: Any,
         signature: Any,
     ) -> None:
+        """
 
-        # TODO: Construct timeout info properly
+        Args:
+            round:
+            high_qc:
+            sender:
+            signature:
+        """
         self.round = round
         self.high_qc = high_qc
         self.sender = sender  # Added automatically when constructed
@@ -153,12 +249,28 @@ class TimeoutMessage:
         high_commit_qc: QuorumCertificate,
         id: int,
     ) -> None:
+        """
+
+        Args:
+            tmo_info:
+            last_round_tc:
+            high_commit_qc:
+            id:
+        """
         self.tmo_info = tmo_info
         self.last_round_tc = last_round_tc
         self.high_commit_qc = high_commit_qc
         self.id = id
 
     def create_signed_payload(self, signing_key: SigningKey) -> Tuple:
+        """
+
+        Args:
+            signing_key:
+
+        Returns:
+
+        """
         self.tmo_info.signature = Signatures.sign_message(
             bytes(str(self.id), encoding="utf-8"), signing_key
         )
@@ -167,6 +279,16 @@ class TimeoutMessage:
 
     @staticmethod
     def verify_sig_from_id(id, signature, verify_key):
+        """
+
+        Args:
+            id:
+            signature:
+            verify_key:
+
+        Returns:
+
+        """
         return Signatures.verify_message(signature, verify_key) == bytes(
             str(id), encoding="utf-8"
         )
@@ -181,6 +303,15 @@ class VoteMsg:
         sender: Any,  # sender = u; // Added automatically when constructed
         signature: Any,  # signature = signu(ledger commit info); // Signed automatically when constructed
     ) -> None:
+        """
+
+        Args:
+            vote_info:
+            ledger_commit_info:
+            high_commit_qc:
+            sender:
+            signature:
+        """
         self.vote_info = vote_info
         self.ledger_commit_info = ledger_commit_info
         self.high_commit_qc = high_commit_qc
@@ -188,6 +319,14 @@ class VoteMsg:
         self.signature = signature
 
     def create_signed_payload(self, signing_key: SigningKey) -> Tuple:
+        """
+
+        Args:
+            signing_key:
+
+        Returns:
+
+        """
         signed_payload = Signatures.pickle_and_sign_payload(self, signing_key)
         return self, signed_payload
 
@@ -202,7 +341,16 @@ class ProposalMessage:
         sender_id: int,
         trx_ids: List[str],
     ) -> None:
+        """
 
+        Args:
+            block:
+            last_round_tc:
+            high_commit_qc:
+            signature:
+            sender_id:
+            trx_ids:
+        """
         self.block = block
         self.last_round_tc = last_round_tc
         self.high_commit_qc = high_commit_qc
@@ -211,11 +359,24 @@ class ProposalMessage:
         self.trx_ids = trx_ids
 
     def __repr__(self):
+        """
+
+        Returns:
+
+        """
         from pprint import pformat
 
         return pformat(vars(self), indent=4, width=1)
 
     def create_signed_payload(self, signing_key: SigningKey) -> Tuple:
+        """
+
+        Args:
+            signing_key:
+
+        Returns:
+
+        """
         signed_payload = Signatures.pickle_and_sign_payload(self, signing_key)
         return self, signed_payload
 
@@ -226,7 +387,15 @@ class Certificate:
 
     @staticmethod
     def is_valid_signatures(block: Block, certificate: TimeoutCertificate) -> bool:
-        # TODO: Complete
+        """
+
+        Args:
+            block:
+            certificate:
+
+        Returns:
+
+        """
         return True
 
 
@@ -236,6 +405,11 @@ class Signatures:
 
     @staticmethod
     def init_signatures() -> Tuple[SigningKey, VerifyKey]:
+        """
+
+        Returns:
+
+        """
         private_key = SigningKey.generate()
         public_key = private_key.verify_key
 
@@ -245,6 +419,16 @@ class Signatures:
     def sign_message(
         msg: bytes, private_key: SigningKey, encoder: Optional[Any] = encoder
     ) -> SignedMessage:
+        """
+
+        Args:
+            msg:
+            private_key:
+            encoder:
+
+        Returns:
+
+        """
         return private_key.sign(msg, encoder=encoder)
 
     @staticmethod
@@ -253,6 +437,16 @@ class Signatures:
         public_key: VerifyKey,
         encoder: Optional[Any] = encoder,
     ) -> bytes:
+        """
+
+        Args:
+            signed_msg:
+            public_key:
+            encoder:
+
+        Returns:
+
+        """
         try:
             return public_key.verify(signed_msg, encoder=encoder)
         except (CryptoError, BadSignatureError):
@@ -260,6 +454,15 @@ class Signatures:
 
     @staticmethod
     def pickle_and_sign_payload(obj: Any, signing_key: SigningKey) -> bytes:
+        """
+
+        Args:
+            obj:
+            signing_key:
+
+        Returns:
+
+        """
         pickled_obj = pickle.dumps(obj)
         return Signatures.sign_message(pickled_obj, signing_key)
 
@@ -267,6 +470,15 @@ class Signatures:
     def verify_signed_payload(
         signed_payload: SignedMessage, verify_key: VerifyKey
     ) -> Any:
+        """
+
+        Args:
+            signed_payload:
+            verify_key:
+
+        Returns:
+
+        """
         verified_obj = Signatures.verify_message(signed_payload, verify_key)
         if verified_obj:
             return pickle.loads(verified_obj)
@@ -282,6 +494,16 @@ class Hasher:
     def hash(
         msg: bytes, engine: Optional[Any] = engine, encoder: Optional[Any] = encoder
     ) -> bytes:
+        """
+
+        Args:
+            msg:
+            engine:
+            encoder:
+
+        Returns:
+
+        """
         return engine(msg, encoder=encoder)
 
 
@@ -302,6 +524,7 @@ class Event:
 
 class Proposal:
     def __init__(self) -> None:
+        """ """
         self.last_round_tc: TimeoutCertificate = None
         self.block: Block = None
 
@@ -316,6 +539,16 @@ class TestConfig:
         client_pubkey_map: Dict[int, VerifyKey],
         num_clients: int,
     ) -> None:
+        """
+
+        Args:
+            nvalidators:
+            validator_key_pairs:
+            validator_pubkey_map:
+            client_key_pairs:
+            client_pubkey_map:
+            num_clients:
+        """
         self.nvalidators = nvalidators
         self.validator_key_pairs = validator_key_pairs
         self.validator_pubkey_map = validator_pubkey_map
@@ -492,6 +725,11 @@ failure_cases = [
 
 
 def generate_test_configs() -> List[TestConfig]:
+    """
+
+    Returns:
+
+    """
     n_validators = [4, 10]
     n_clients = [10, 2]
     tests = []

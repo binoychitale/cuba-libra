@@ -1,13 +1,6 @@
 from client import Client
 from modules.fault_injection.fault_injection import ValidatorFI
-from modules.objects import (
-    FailType,
-    Failure,
-    FailureConfig,
-    MsgType,
-    failure_cases,
-    generate_test_configs,
-)
+from modules.objects import FailureConfig, failure_cases, generate_test_configs
 from validator import *
 
 

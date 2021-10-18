@@ -26,6 +26,23 @@ class ValidatorFI(process, Validator):
         failure_config: NamedTuple,
         parent,
     ):
+        """
+
+        Args:
+            id:
+            f:
+            key_pair:
+            public_key_map:
+            validator_map:
+            validator_keypair_map:
+            client_map:
+            client_keypair_map:
+            failure_config:
+            parent:
+
+        Returns:
+
+        """
         self.failure_config = failure_config
         super().setup(
             ps,
@@ -42,6 +59,14 @@ class ValidatorFI(process, Validator):
         # do any additional setup here
 
     def send(m, to):
+        """
+
+        Args:
+            to:
+
+        Returns:
+
+        """
         for failure in self.failure_config.failures:
             if (
                 (failure.src == super().get_validator_id() or failure.src == "_")
@@ -65,11 +90,13 @@ class ValidatorFI(process, Validator):
                     break
                 elif failure.fail_type == FailType.Delay:
                     print(
-                    "DELAY ON------------------------------------------------------------------------------------------")
+                        "DELAY ON------------------------------------------------------------------------------------------"
+                    )
                     time.sleep(failure.val)
                 elif failure.fail_type == FailType.MsgLoss:
                     print(
-                    "MSG LOSS ON------------------------------------------------------------------------------------------")
+                        "MSG LOSS ON------------------------------------------------------------------------------------------"
+                    )
                     return
                 elif failure.fail_type == FailType.SetAttr:
                     if failure.attr == "round":
@@ -80,11 +107,21 @@ class ValidatorFI(process, Validator):
         super().send(m, to)
 
     def get_pid(dest_p_obj):
+        """
+
+        Returns:
+
+        """
         for (id, p_obj) in enumerate(super().get_validator_map()):
             if dest_p_obj == p_obj:
                 return id
 
     def msg_string_to_enum(msg_type):
+        """
+
+        Returns:
+
+        """
         if msg_type == "Message-Proposal":
             return MsgType.Proposal
         elif msg_type == "Message-Vote":
