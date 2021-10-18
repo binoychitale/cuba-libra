@@ -105,6 +105,8 @@ class Validator(process):
                 timeout_msg: TimeoutMessage = self.main.pacemaker.local_timeout_round(
                     self.main.safety, self.main.block_tree
                 )
+                if timeout_msg.tmo_info is None:
+                    continue
                 self.process_timeout(timeout_msg)
                 send(
                     (
