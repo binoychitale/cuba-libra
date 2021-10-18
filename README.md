@@ -156,6 +156,3 @@ The system simply times out and moves to the next round (which is still correct 
 |   Wrapper             |   Rakshith Raj
 |   Validator           |   Akshay Somayaji, Binoy Chiltale, Rakshith Raj
 
-## Other comments (optional).
- 
-- <anything else you want us to know.>
